@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import type { Project, ActionItem } from '@/lib/types';
+import type { Project, ActionItem, ChatMessage } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,6 +107,7 @@ export default function ProjectPage() {
         setProject(localProject);
         setProjectName(localProject.name);
         setPageState('dashboard');
+        router.replace(`/project/${localProject.id}`);
         return;
       }
 
@@ -255,7 +256,24 @@ export default function ProjectPage() {
                         <p className="text-sm text-muted-foreground mb-4">
                            Engage in a realistic, simulated hearing to test your arguments, practice cross-examination, and get real-time coaching.
                         </p>
-                         <Button onClick={() => router.push(`/project/${projectId}/simulation`)}>
+                         <Button onClick={() => {
+                             if (project) {
+                                if (project.id.startsWith('local-')) {
+                                    try {
+                                        const serializableProject = {
+                                            ...project,
+                                            createdAt: project.createdAt?.toDate ? project.createdAt.toDate().toISOString() : new Date(project.createdAt).toISOString(),
+                                        };
+                                        sessionStorage.setItem('localProject', JSON.stringify(serializableProject));
+                                    } catch (e) {
+                                        console.error("Could not serialize project for sessionStorage", e);
+                                        toast({ title: "Error", description: "Could not start local simulation.", variant: "destructive" });
+                                        return;
+                                    }
+                                }
+                                router.push(`/project/${project.id}/simulation`);
+                            }
+                        }}>
                              <ChevronRight className="mr-2" /> Start Simulation
                         </Button>
                     </div>

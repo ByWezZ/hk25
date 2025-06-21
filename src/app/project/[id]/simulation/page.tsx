@@ -1,4 +1,3 @@
-// This file will be created.
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -30,8 +29,34 @@ export default function SimulationPage() {
 
     const fetchProjectData = async () => {
       setLoading(true);
+
+      if ((projectId as string).startsWith('local-')) {
+        const localProjectJSON = sessionStorage.getItem('localProject');
+        if (localProjectJSON) {
+            try {
+                const projectData: Project = JSON.parse(localProjectJSON);
+                if (projectData.id === projectId) {
+                    if (!projectData.strategy || !projectData.analysis) {
+                        toast({ title: 'Cannot start simulation', description: 'Project analysis must be complete before starting a simulation.', variant: 'destructive' });
+                        router.push(`/project/${projectId}`);
+                        return;
+                    }
+                    projectData.createdAt = new Date(projectData.createdAt as string);
+                    setProject(projectData);
+                    setLoading(false);
+                    return; 
+                }
+            } catch (e) {
+                 console.error("Failed to parse local project from sessionStorage", e);
+            }
+        }
+        toast({ title: 'Error', description: 'Could not load local project data session. Please return to the dashboard.', variant: 'destructive' });
+        router.push('/dashboard');
+        return;
+      }
+      
       if (!db) {
-        toast({ title: "Error", description: "Firebase is not configured.", variant: "destructive" });
+        toast({ title: "Error", description: "Firebase is not configured for this project.", variant: "destructive" });
         router.push('/dashboard');
         return;
       }
@@ -63,7 +88,16 @@ export default function SimulationPage() {
 
   const handleSaveState = async (simulationState: SimulationState) => {
     if (!user || !project) return;
-     if (project.id.startsWith('local-')) return; // Don't save for local-only projects
+     if (project.id.startsWith('local-')) {
+        // Update sessionStorage for local projects
+        const projectToStore = {
+            ...project,
+            simulationState,
+            createdAt: project.createdAt?.toISOString ? project.createdAt.toISOString() : new Date().toISOString(),
+        };
+        sessionStorage.setItem('localProject', JSON.stringify(projectToStore));
+        return;
+     }
 
     const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
     try {
