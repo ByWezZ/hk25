@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { generateLegalSummary } from '@/lib/actions';
+import { getAIErrorMessage } from '@/lib/utils';
 import { Spinner } from '@/components/Spinner';
 
 type LegalCaseModalProps = {
@@ -22,6 +23,8 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!caseName) return;
+
     const fetchSummary = async () => {
       setLoading(true);
       setError(null);
@@ -29,7 +32,7 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
         const result = await generateLegalSummary({ caseName });
         setSummary(result.summary);
       } catch (err) {
-        setError('Failed to fetch case summary.');
+        setError(getAIErrorMessage(err));
         console.error(err);
       } finally {
         setLoading(false);
@@ -53,7 +56,7 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
               <p className="ml-2">Generating summary...</p>
             </div>
           ) : error ? (
-            <p className="text-destructive">{error}</p>
+            <p className="text-destructive text-center">{error}</p>
           ) : (
             <p className="text-sm text-slate-300 whitespace-pre-wrap">{summary}</p>
           )}

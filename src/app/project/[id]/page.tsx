@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, setDoc, arrayUnion } from 'firebase/firestore';
-import type { Project, ActionItem, ChatMessage } from '@/lib/types';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import type { Project, ActionItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/Spinner';
@@ -14,7 +14,9 @@ import { ThinkingAnimation } from '@/components/features/ThinkingAnimation';
 import { AnalysisDashboard } from '@/components/features/AnalysisDashboard';
 import { ActionChecklist } from '@/components/features/ActionChecklist';
 import { ChatWindow } from '@/components/features/ChatWindow';
-import { generateAnalysis, generateActionPlan, chatWithArbiter, scopedChat } from '@/lib/actions';
+import { ScopedChatDialog } from '@/components/features/ScopedChatDialog';
+import { generateAnalysis, generateActionPlan } from '@/lib/actions';
+import { getAIErrorMessage } from '@/lib/utils';
 import { MessageSquare, ListTodo } from 'lucide-react';
 
 type PageState = 'form' | 'thinking' | 'dashboard';
@@ -51,7 +53,6 @@ export default function ProjectPage() {
             toast({ title: 'Error', description: 'Failed to fetch project data.', variant: 'destructive' });
           }
         } else {
-          // Firebase is not configured or it's a local project
           setProject({
             id: projectId as string,
             name: `Local Project`,
@@ -87,7 +88,7 @@ export default function ProjectPage() {
       toast({ title: 'Success', description: 'Analysis generated successfully.' });
     } catch (error) {
       console.error("Error generating analysis:", error);
-      toast({ title: 'Error', description: 'Failed to generate analysis.', variant: 'destructive' });
+      toast({ title: 'Error', description: getAIErrorMessage(error), variant: 'destructive' });
       setPageState('form'); // Revert to form on error
     }
   };
@@ -106,20 +107,36 @@ export default function ProjectPage() {
             chatHistory: [],
         }));
 
-        const updatedProject = { ...project, actionPlan: newActionPlan };
+       await handleActionItemUpdate(newActionPlan);
         
-        if (db && !(projectId as string).startsWith('local-')) {
-            const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
-            await updateDoc(projectDocRef, { actionPlan: newActionPlan });
-        }
-        
-        setProject(updatedProject);
         toast({ title: 'Success', description: 'Action plan created.' });
 
     } catch (error) {
         console.error("Error generating action plan:", error);
-        toast({ title: 'Error', description: 'Failed to create action plan.', variant: 'destructive' });
+        toast({ title: 'Error', description: getAIErrorMessage(error), variant: 'destructive' });
     }
+  };
+  
+  const handleActionItemUpdate = async (updatedItems: ActionItem[]) => {
+    if (!project) return;
+    
+    const updatedProject = { ...project, actionPlan: updatedItems };
+    setProject(updatedProject);
+
+    if (db && user && !project.id.startsWith('local-')) {
+      const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
+      await updateDoc(projectRef, { actionPlan: updatedItems });
+    }
+  };
+
+  const handleScopedChatItemUpdate = (updatedItem: ActionItem) => {
+    if (!project || !project.actionPlan) return;
+
+    const newActionPlan = project.actionPlan.map(item => 
+      item.id === updatedItem.id ? updatedItem : item
+    );
+
+    handleActionItemUpdate(newActionPlan);
   };
   
   const renderContent = () => {
@@ -142,10 +159,8 @@ export default function ProjectPage() {
             {project.actionPlan && (
                 <ActionChecklist
                     items={project.actionPlan}
-                    onUpdate={(updatedItems) => setProject(p => p ? {...p, actionPlan: updatedItems} : null)}
+                    onUpdate={handleActionItemUpdate}
                     onDiscuss={(item) => setScopedChatItem(item)}
-                    projectId={project.id}
-                    userId={user!.uid}
                 />
             )}
           </div>
@@ -187,6 +202,12 @@ export default function ProjectPage() {
         onOpenChange={setChatOpen}
         project={project}
         onProjectUpdate={setProject}
+      />
+
+      <ScopedChatDialog
+        item={scopedChatItem}
+        onClose={() => setScopedChatItem(null)}
+        onUpdate={handleScopedChatItemUpdate}
       />
     </>
   );

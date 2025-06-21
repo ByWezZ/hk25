@@ -5,28 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MessageSquare, ListTodo } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
 
 type ActionChecklistProps = {
     items: ActionItem[];
     onUpdate: (items: ActionItem[]) => void;
     onDiscuss: (item: ActionItem) => void;
-    projectId: string;
-    userId: string;
 };
 
-export function ActionChecklist({ items, onUpdate, onDiscuss, projectId, userId }: ActionChecklistProps) {
-    const handleToggle = async (itemId: string) => {
+export function ActionChecklist({ items, onUpdate, onDiscuss }: ActionChecklistProps) {
+    const handleToggle = (itemId: string) => {
         const updatedItems = items.map(item => 
             item.id === itemId ? { ...item, completed: !item.completed } : item
         );
         onUpdate(updatedItems);
-        
-        if (db && !projectId.startsWith('local-')) {
-            const projectRef = doc(db, 'users', userId, 'projects', projectId);
-            await updateDoc(projectRef, { actionPlan: updatedItems });
-        }
     };
 
     return (

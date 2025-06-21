@@ -18,7 +18,9 @@ import { Send, User } from 'lucide-react';
 import { Spinner } from '../Spinner';
 import { chatWithArbiter } from '@/lib/actions';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { getAIErrorMessage } from '@/lib/utils';
 
 type ChatWindowProps = {
   isOpen: boolean;
@@ -28,6 +30,7 @@ type ChatWindowProps = {
 };
 
 export function ChatWindow({ isOpen, onOpenChange, project, onProjectUpdate }: ChatWindowProps) {
+  const { toast } = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -36,9 +39,12 @@ export function ChatWindow({ isOpen, onOpenChange, project, onProjectUpdate }: C
   
   useEffect(() => {
     if (scrollAreaRef.current) {
-        scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+        const scrollEl = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+        if (scrollEl) {
+            scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+        }
     }
-  }, [chatHistory]);
+  }, [chatHistory, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +76,8 @@ export function ChatWindow({ isOpen, onOpenChange, project, onProjectUpdate }: C
       };
       
       const finalHistory = [...updatedHistory, arbiterMessage];
-      onProjectUpdate({ ...project, mainChatHistory: finalHistory });
+      const finalProject = { ...project, mainChatHistory: finalHistory };
+      onProjectUpdate(finalProject);
       
       if (db && !project.id.startsWith('local-')) {
           const projectRef = doc(db, 'users', project.userId, 'projects', project.id);
@@ -81,6 +88,7 @@ export function ChatWindow({ isOpen, onOpenChange, project, onProjectUpdate }: C
 
     } catch (error) {
       console.error('Chat error:', error);
+      toast({ title: 'Error', description: getAIErrorMessage(error), variant: 'destructive' });
       // Revert optimistic update on error
        onProjectUpdate({ ...project, mainChatHistory: chatHistory });
     } finally {
