@@ -26,14 +26,14 @@ export default function LoginPage() {
   if (loading) return null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-transparent px-4">
-      <Card className="w-full max-w-md border-slate-800 bg-black/20 shadow-2xl shadow-slate-900/50 backdrop-blur-sm">
+    <div className="flex min-h-screen items-center justify-center bg-secondary px-4">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-slate-200">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Scale className="h-8 w-8 text-primary" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Scale className="h-8 w-8" />
           </div>
-          <CardTitle className="font-headline text-4xl text-slate-100">DIALOGUE</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="font-headline text-4xl text-foreground">DIALOGUE</CardTitle>
+          <CardDescription>
             Your AI-Powered Strategic Co-Counsel
           </CardDescription>
         </CardHeader>

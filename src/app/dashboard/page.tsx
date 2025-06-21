@@ -47,7 +47,7 @@ export default function DashboardPage() {
   return (
     <div className="container py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="font-headline text-4xl text-slate-100">My Projects</h1>
+        <h1 className="font-headline text-4xl text-foreground">My Projects</h1>
         <Button onClick={() => router.push('/project/new')}>
           <PlusCircle className="mr-2 h-4 w-4" />
           New Analysis
@@ -59,13 +59,13 @@ export default function DashboardPage() {
           <Spinner size="lg" />
         </div>
       ) : projects.length === 0 ? (
-        <Card className="text-center py-12 bg-transparent border-dashed border-slate-700">
+        <Card className="text-center py-12 bg-card/60 backdrop-blur-sm border-dashed border-slate-300">
           <CardHeader>
             <div className="mx-auto bg-secondary rounded-full h-16 w-16 flex items-center justify-center mb-4">
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
-            <CardTitle className="text-slate-200">No Projects Yet</CardTitle>
-            <CardDescription className="text-slate-400">Get started by creating your first analysis.</CardDescription>
+            <CardTitle>No Projects Yet</CardTitle>
+            <CardDescription>Get started by creating your first analysis.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => router.push('/project/new')}>
@@ -79,12 +79,12 @@ export default function DashboardPage() {
           {projects.map((project) => (
             <Card 
               key={project.id} 
-              className="bg-slate-900/50 border-slate-800 hover:border-primary hover:shadow-2xl hover:shadow-slate-800/20 transition-all cursor-pointer group"
+              className="bg-card/60 backdrop-blur-sm border border-slate-200 hover:border-primary/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all cursor-pointer group"
               onClick={() => router.push(`/project/${project.id}`)}
             >
               <CardHeader>
-                <CardTitle className="truncate text-slate-200 group-hover:text-primary transition-colors">{project.name}</CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardTitle className="truncate group-hover:text-primary transition-colors">{project.name}</CardTitle>
+                <CardDescription>
                   {project.createdAt?.toDate ? `Created ${formatDistanceToNow(project.createdAt.toDate())} ago` : 'Date not available'}
                 </CardDescription>
               </CardHeader>
