@@ -92,23 +92,16 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {analysis.adversaryRebuttal.map((item, index) => (
-              <Accordion key={index} type="single" collapsible className="p-4 bg-red-950/20 rounded-lg border border-red-500/20">
-                 <AccordionItem value={`rebuttal-${index}`} className="border-none">
-                    <AccordionTrigger className="font-semibold text-slate-200 hover:no-underline py-0">{item.rebuttal}</AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                      {item.weaknesses.map((weakness, i) => (
-                        <div key={i} className="mt-3 pl-4 border-l-2 border-red-500/30">
-                          <p className="text-sm text-red-200">{weakness.weakness}</p>
-                           <Badge variant="outline" className={`mt-2 ${getVulnerabilityColor(weakness.vulnerabilityScore)}`}>
-                            Vulnerability Score: {weakness.vulnerabilityScore}/10
-                          </Badge>
-                          <p className="text-xs text-muted-foreground mt-2">{weakness.rationale}</p>
-                        </div>
-                      ))}
-                    </AccordionContent>
-                 </AccordionItem>
-              </Accordion>
+            {analysis.adversaryRebuttal.map((weakness, index) => (
+                <div key={index} className="p-4 bg-red-950/20 rounded-lg border border-red-500/20">
+                    <p className="font-semibold text-red-200">{weakness.weakness}</p>
+                    <div className="flex items-center justify-between mt-2">
+                        <Badge variant="outline" className={`mt-2 ${getVulnerabilityColor(weakness.vulnerabilityScore)}`}>
+                          Vulnerability Score: {weakness.vulnerabilityScore}/10
+                        </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">{weakness.rationale}</p>
+                </div>
             ))}
           </div>
         </CardContent>

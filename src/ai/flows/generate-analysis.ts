@@ -35,9 +35,11 @@ const threePartAnalysisPrompt = ai.definePrompt({
       *   **Crucially, for each citation, provide a detailed 'relevance' explanation:** Detail which part of the cited case is relevant, how it directly supports the specific argument, and how it links to the user's current case facts.
 
   2.  **Adversary's Rebuttal:**
-      *   Identify every significant weakness in the advocate’s arguments.
-      *   For each weakness, provide a 'vulnerabilityScore' from 1 (minor) to 10 (critical).
-      *   **Provide a detailed 'rationale' for each score:** Justify why you assigned that specific score, considering its potential impact on the case.
+      *   For each argument in the Advocate's Brief, identify every significant weakness.
+      *   For each identified weakness, provide:
+          *   A 'weakness' description.
+          *   A 'vulnerabilityScore' from 1 (minor) to 10 (critical).
+          *   A detailed 'rationale' justifying the score.
 
   3.  **Arbiter's Synthesis:**
       *   Identify the absolute 'keyVulnerabilities' that are most likely to be dispositive.
