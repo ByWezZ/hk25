@@ -15,9 +15,10 @@ import { AnalysisDashboard } from '@/components/features/AnalysisDashboard';
 import { ActionChecklist } from '@/components/features/ActionChecklist';
 import { ChatWindow } from '@/components/features/ChatWindow';
 import { ScopedChatDialog } from '@/components/features/ScopedChatDialog';
+import { ActionPlanDraftDialog } from '@/components/features/ActionPlanDraftDialog';
 import { generateAnalysis, generateActionPlan } from '@/lib/actions';
 import { getAIErrorMessage } from '@/lib/utils';
-import { MessageSquare, ListTodo } from 'lucide-react';
+import { MessageSquare, ListTodo, BrainCircuit } from 'lucide-react';
 
 type PageState = 'form' | 'thinking' | 'dashboard';
 
@@ -31,6 +32,8 @@ export default function ProjectPage() {
   const [loading, setLoading] = useState(true);
   const [isChatOpen, setChatOpen] = useState(false);
   const [scopedChatItem, setScopedChatItem] = useState<ActionItem | null>(null);
+  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
+  const [draftActionPlan, setDraftActionPlan] = useState<string[] | null>(null);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -89,33 +92,42 @@ export default function ProjectPage() {
     } catch (error) {
       console.error("Error generating analysis:", error);
       toast({ title: 'Error', description: getAIErrorMessage(error), variant: 'destructive' });
-      setPageState('form'); // Revert to form on error
+      setPageState('form'); 
     }
   };
   
   const handleCreateActionPlan = async () => {
     if (!project?.analysis) return;
+    setIsCreatingPlan(true);
 
     try {
         const analysisText = JSON.stringify(project.analysis);
-        const result = await generateActionPlan({ analysisResults: analysisText });
-
-        const newActionPlan = result.actionItems.map((item, index) => ({
-            id: `${Date.now()}-${index}`,
-            text: item,
-            completed: false,
-            chatHistory: [],
-        }));
-
-       await handleActionItemUpdate(newActionPlan);
+        const result = await generateActionPlan({ 
+            analysisResults: analysisText,
+            chatHistory: project.mainChatHistory || [],
+        });
         
-        toast({ title: 'Success', description: 'Action plan created.' });
+        setDraftActionPlan(result.actionItems);
 
     } catch (error) {
         console.error("Error generating action plan:", error);
         toast({ title: 'Error', description: getAIErrorMessage(error), variant: 'destructive' });
+    } finally {
+        setIsCreatingPlan(false);
     }
   };
+
+  const handleConfirmActionPlan = (confirmedItems: {text: string}[]) => {
+     const newActionPlan: ActionItem[] = confirmedItems.map((item, index) => ({
+        id: `${Date.now()}-${index}`,
+        text: item.text,
+        completed: false,
+        chatHistory: [],
+    }));
+    handleActionItemUpdate(newActionPlan);
+    setDraftActionPlan(null);
+    toast({ title: 'Success', description: 'Action plan saved.' });
+  }
   
   const handleActionItemUpdate = async (updatedItems: ActionItem[]) => {
     if (!project) return;
@@ -131,31 +143,32 @@ export default function ProjectPage() {
 
   const handleScopedChatItemUpdate = (updatedItem: ActionItem) => {
     if (!project || !project.actionPlan) return;
-
     const newActionPlan = project.actionPlan.map(item => 
       item.id === updatedItem.id ? updatedItem : item
     );
-
     handleActionItemUpdate(newActionPlan);
   };
   
   const renderContent = () => {
     switch (pageState) {
       case 'form':
-        return <StrategyForm onSubmit={handleStrategySubmit} isLoading={false} />;
+        return <StrategyForm onSubmit={handleStrategySubmit} />;
       case 'thinking':
         return <ThinkingAnimation />;
       case 'dashboard':
         return project?.analysis ? (
           <div className="space-y-8">
             <AnalysisDashboard analysis={project.analysis} />
-            {!project.actionPlan && (
-                <div className="text-center py-6">
-                    <Button onClick={handleCreateActionPlan} size="lg">
-                        <ListTodo className="mr-2" /> Create Action Plan
+            
+            <div className="text-center py-6">
+                {!project.actionPlan && (
+                    <Button onClick={handleCreateActionPlan} size="lg" disabled={isCreatingPlan}>
+                        {isCreatingPlan ? <Spinner className="mr-2"/> : <ListTodo className="mr-2" />}
+                        {isCreatingPlan ? 'Generating...' : 'Create Action Plan'}
                     </Button>
-                </div>
-            )}
+                )}
+            </div>
+
             {project.actionPlan && (
                 <ActionChecklist
                     items={project.actionPlan}
@@ -209,6 +222,15 @@ export default function ProjectPage() {
         onClose={() => setScopedChatItem(null)}
         onUpdate={handleScopedChatItemUpdate}
       />
+
+      {draftActionPlan && (
+        <ActionPlanDraftDialog
+            isOpen={!!draftActionPlan}
+            onClose={() => setDraftActionPlan(null)}
+            items={draftActionPlan.map(text => ({ text }))}
+            onConfirm={handleConfirmActionPlan}
+        />
+      )}
     </>
   );
 }

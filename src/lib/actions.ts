@@ -10,6 +10,10 @@ import { chatWithArbiter as chatWithArbiterFlow } from '@/ai/flows/chat-with-arb
 import type { ChatWithArbiterInput, ChatWithArbiterOutput } from '@/ai/flows/chat-with-arbiter';
 import { scopedChat as scopedChatFlow } from '@/ai/flows/scoped-chat';
 import type { ScopedChatInput, ScopedChatOutput } from '@/ai/flows/scoped-chat';
+import { optimizePrompt as optimizePromptFlow } from '@/ai/flows/optimize-prompt';
+import type { OptimizePromptInput, OptimizePromptOutput } from '@/ai/flows/optimize-prompt';
+import { generateAdversarialPlaybook as generateAdversarialPlaybookFlow } from '@/ai/flows/generate-adversarial-playbook';
+import type { GenerateAdversarialPlaybookInput, GenerateAdversarialPlaybookOutput } from '@/ai/flows/generate-adversarial-playbook';
 
 export async function generateAnalysis(
   input: GenerateAnalysisInput
@@ -39,4 +43,16 @@ export async function scopedChat(
   input: ScopedChatInput
 ): Promise<ScopedChatOutput> {
   return await scopedChatFlow(input);
+}
+
+export async function optimizePrompt(
+    input: OptimizePromptInput
+): Promise<OptimizePromptOutput> {
+    return await optimizePromptFlow(input);
+}
+
+export async function generateAdversarialPlaybook(
+    input: GenerateAdversarialPlaybookInput
+): Promise<GenerateAdversarialPlaybookOutput> {
+    return await generateAdversarialPlaybookFlow(input);
 }

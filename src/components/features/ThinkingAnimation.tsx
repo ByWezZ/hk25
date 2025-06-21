@@ -18,7 +18,14 @@ export function ThinkingAnimation() {
       }, index * 2500)
     );
 
-    return () => timers.forEach(clearTimeout);
+    const finalTimer = setTimeout(() => {
+        setActiveStage(stages.length);
+    }, stages.length * 2500)
+
+    return () => {
+        timers.forEach(clearTimeout);
+        clearTimeout(finalTimer);
+    };
   }, []);
 
   return (

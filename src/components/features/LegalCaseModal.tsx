@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { generateLegalSummary } from '@/lib/actions';
 import { getAIErrorMessage } from '@/lib/utils';
 import { Spinner } from '@/components/Spinner';
@@ -17,8 +18,13 @@ type LegalCaseModalProps = {
   onClose: () => void;
 };
 
+type SummaryData = {
+    summary: string;
+    sourceText: string;
+}
+
 export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
-  const [summary, setSummary] = useState('');
+  const [data, setData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +36,7 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
       setError(null);
       try {
         const result = await generateLegalSummary({ caseName });
-        setSummary(result.summary);
+        setData(result);
       } catch (err) {
         setError(getAIErrorMessage(err));
         console.error(err);
@@ -44,10 +50,10 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[625px] bg-slate-900 border-slate-800 text-slate-100">
+      <DialogContent className="sm:max-w-[625px] bg-card border-slate-800 text-slate-100">
         <DialogHeader>
           <DialogTitle className="font-headline text-primary">{caseName}</DialogTitle>
-          <DialogDescription>AI-Generated Case Summary</DialogDescription>
+          <DialogDescription>AI-Generated Summary & Source Data</DialogDescription>
         </DialogHeader>
         <div className="py-4 max-h-[60vh] overflow-y-auto">
           {loading ? (
@@ -57,9 +63,23 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
             </div>
           ) : error ? (
             <p className="text-destructive text-center">{error}</p>
-          ) : (
-            <p className="text-sm text-slate-300 whitespace-pre-wrap">{summary}</p>
-          )}
+          ) : data ? (
+            <Tabs defaultValue="summary" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="summary">AI Summary</TabsTrigger>
+                    <TabsTrigger value="source">Source of Truth</TabsTrigger>
+                </TabsList>
+                <TabsContent value="summary" className="mt-4">
+                    <p className="text-sm text-slate-300 whitespace-pre-wrap">{data.summary}</p>
+                </TabsContent>
+                <TabsContent value="source" className="mt-4">
+                    <div className="p-4 bg-background rounded-md border border-border">
+                        <h4 className="font-semibold text-muted-foreground mb-2">Raw Source Text</h4>
+                        <p className="text-sm text-slate-400 whitespace-pre-wrap font-mono">{data.sourceText}</p>
+                    </div>
+                </TabsContent>
+            </Tabs>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

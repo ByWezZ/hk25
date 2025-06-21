@@ -1,4 +1,5 @@
 import type { GenerateAnalysisOutput } from "@/ai/flows/generate-analysis";
+import type { AdversarialPlaybook } from "@/ai/flows/generate-adversarial-playbook";
 
 export type Project = {
   id: string;
@@ -12,6 +13,8 @@ export type Project = {
 };
 
 export type Analysis = GenerateAnalysisOutput['analysisDashboard'];
+
+export type AdversarialPlaybookData = AdversarialPlaybook;
 
 export type ActionItem = {
   id: string;
