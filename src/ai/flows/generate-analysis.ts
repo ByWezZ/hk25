@@ -6,7 +6,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {AdversarialPlaybookSchema, generateAdversarialPlaybook} from './generate-adversarial-playbook';
+import {generateAdversarialPlaybook} from './generate-adversarial-playbook';
+import {AdversarialPlaybookSchema} from '@/lib/types';
 
 const GenerateAnalysisInputSchema = z.object({
   legalStrategy: z.string().describe('The legal strategy to be analyzed, including case facts and initial arguments.'),
