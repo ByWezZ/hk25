@@ -131,17 +131,25 @@ const runSimulationFlow = ai.defineFlow(
 
             const { output: crossExamTurn } = await ai.generate({
                 model: 'googleai/gemini-1.5-pro',
-                tools: [ObjectionSchema, RulingSchema],
                 prompt: `You are an Arbitral Tribunal simulation engine. Given the user's question to the witness, first, as the Opposing Counsel, decide if you should object. If so, generate the objection.
                 Then, as the Tribunal, rule on the objection, provide a coaching tip if the user's question was weak or the objection was valid, and calculate the impact on case strength (-10 to +10). Finally, generate the witness's answer.
                 
                 Case Context: """${input.caseStrategy}"""
                 Witness: ${newState.currentWitness?.name}, ${newState.currentWitness?.background}
                 User's Question: """${input.userAction.payload}"""`,
-                output: { schema: z.object({ objection: ObjectionSchema, ruling: RulingSchema, witnessAnswer: z.string() }) }
+                output: { 
+                  schema: z.object({ 
+                    objection: ObjectionSchema.describe("The opposing counsel's objection, if any."), 
+                    ruling: RulingSchema.describe("The tribunal's ruling and assessment."), 
+                    witnessAnswer: z.string().describe("The witness's answer to the user's question.") 
+                }) }
             });
             
-            const { objection, ruling, witnessAnswer } = crossExamTurn!;
+            if (!crossExamTurn) {
+                throw new Error("The AI failed to generate a response for the witness examination turn.");
+            }
+
+            const { objection, ruling, witnessAnswer } = crossExamTurn;
             
             if (objection.isObjected) {
                 newState = addTranscript(newState, 'OPPOSING_COUNSEL', objection.objectionText!);
