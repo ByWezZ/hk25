@@ -59,7 +59,7 @@ export default function DashboardPage() {
           <Spinner size="lg" />
         </div>
       ) : projects.length === 0 ? (
-        <Card className="text-center py-12 bg-card/60 backdrop-blur-sm border-dashed border-slate-300">
+        <Card className="text-center py-12 bg-card/60 backdrop-blur-sm border-dashed border-border">
           <CardHeader>
             <div className="mx-auto bg-secondary rounded-full h-16 w-16 flex items-center justify-center mb-4">
               <FileText className="h-8 w-8 text-muted-foreground" />
@@ -79,7 +79,7 @@ export default function DashboardPage() {
           {projects.map((project) => (
             <Card 
               key={project.id} 
-              className="bg-card/60 backdrop-blur-sm border border-slate-200 hover:border-primary/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all cursor-pointer group"
+              className="bg-card/60 backdrop-blur-sm border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer group"
               onClick={() => router.push(`/project/${project.id}`)}
             >
               <CardHeader>

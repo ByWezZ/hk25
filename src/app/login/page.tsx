@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Scale } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,11 +26,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-transparent px-4">
-      <Card className="w-full max-w-md bg-slate-900/60 backdrop-blur-sm border-slate-800 shadow-2xl shadow-black/40">
+      <Card className="w-full max-w-md bg-card/60 backdrop-blur-sm border-slate-800/50 shadow-2xl shadow-black/40">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <Scale className="h-8 w-8" />
-          </div>
           <CardTitle className="font-headline text-4xl text-slate-100">DIALOGUE</CardTitle>
           <CardDescription>
             Your AI-Powered Strategic Co-Counsel

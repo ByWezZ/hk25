@@ -21,27 +21,27 @@ export function ActionChecklist({ items, onUpdate, onDiscuss }: ActionChecklistP
     };
 
     return (
-        <Card className="bg-card border-slate-800 shadow-xl shadow-black/20">
+        <Card className="bg-card/60 backdrop-blur-sm border-border shadow-xl shadow-black/20">
             <CardHeader>
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-900/50 rounded-lg"><ListTodo className="h-6 w-6 text-green-300" /></div>
-                    <CardTitle className="font-headline text-2xl text-green-300">Action Plan</CardTitle>
+                    <div className="p-2 bg-secondary rounded-lg"><ListTodo className="h-6 w-6 text-primary" /></div>
+                    <CardTitle className="font-headline text-2xl text-primary">Action Plan</CardTitle>
                 </div>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
                     {items.map(item => (
-                        <div key={item.id} className="flex items-center justify-between p-4 bg-background rounded-lg border border-slate-700 hover:border-primary/50 transition-colors">
+                        <div key={item.id} className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-border hover:border-primary/50 transition-colors">
                             <div className="flex items-center space-x-4">
                                 <Checkbox
                                     id={item.id}
                                     checked={item.completed}
                                     onCheckedChange={() => handleToggle(item.id)}
-                                    className="data-[state=checked]:bg-green-500 border-slate-600"
+                                    className="data-[state=checked]:bg-primary"
                                 />
                                 <label
                                     htmlFor={item.id}
-                                    className={`text-sm font-medium leading-none text-slate-200 transition-colors ${item.completed ? 'line-through text-muted-foreground' : ''}`}
+                                    className={`text-sm font-medium leading-none text-foreground transition-colors ${item.completed ? 'line-through text-muted-foreground' : ''}`}
                                 >
                                     {item.text}
                                 </label>
