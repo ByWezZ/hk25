@@ -43,8 +43,8 @@ export const LegalArgumentSchema = z.object({
 });
 
 export const WeaknessSchema = z.object({
-  weakness: z.string().describe('Identified weakness in the advocate’s argument.'),
-  vulnerabilityScore: z.number().describe('A numerical score from 1-10 indicating the severity of the vulnerability (1=low, 10=high).'),
+  weakness: z.string().describe('A specific weakness identified in the overall strategy.'),
+  vulnerabilityScore: z.number().min(1).max(10).describe('A numerical score from 1-10 indicating the severity of the vulnerability (1=low, 10=high).'),
   rationale: z.string().describe("A detailed rationale explaining why this specific vulnerability score was given.")
 });
 
@@ -71,7 +71,7 @@ export const ArbiterSynthesisSchema = z.object({
 
 export const ThreePartAnalysisSchema = z.object({
   advocateBrief: z.array(LegalArgumentSchema).describe('The advocate’s initial arguments and case citations.'),
-  adversaryRebuttal: z.array(WeaknessSchema).describe("The adversary’s rebuttals, framed as a list of identified weaknesses in the advocate's arguments."),
+  adversaryRebuttal: z.array(WeaknessSchema).describe("A list of identified weaknesses in the overall strategy."),
   arbiterSynthesis: ArbiterSynthesisSchema.describe('The arbiter’s synthesis of the arguments and rebuttals.'),
 });
 
