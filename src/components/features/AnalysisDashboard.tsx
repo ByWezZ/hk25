@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -92,7 +93,7 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {analysis.adversaryRebuttal.map((weakness, index) => (
+            {analysis.identifiedWeaknesses.map((weakness, index) => (
                 <div key={index} className="p-4 bg-red-950/20 rounded-lg border border-red-500/20">
                     <p className="font-semibold text-red-200">{weakness.weakness}</p>
                     <div className="flex items-center justify-between mt-2">
