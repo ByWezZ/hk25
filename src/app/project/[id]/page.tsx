@@ -19,7 +19,8 @@ import { ScopedChatDialog } from '@/components/features/ScopedChatDialog';
 import { ActionPlanDraftDialog } from '@/components/features/ActionPlanDraftDialog';
 import { generateAnalysis, generateActionPlan, generateProjectName } from '@/lib/actions';
 import { getAIErrorMessage } from '@/lib/utils';
-import { MessageSquare, ListTodo, Pencil } from 'lucide-react';
+import { MessageSquare, ListTodo, Pencil, Rocket, ChevronRight } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 type PageState = 'form' | 'thinking' | 'dashboard';
 
@@ -231,14 +232,36 @@ export default function ProjectPage() {
           <div className="space-y-8">
             <AnalysisDashboard analysis={project.analysis} />
             
-            <div className="text-center py-6">
-                {!project.actionPlan && (
-                    <Button onClick={handleCreateActionPlan} size="lg" disabled={isCreatingPlan}>
-                        {isCreatingPlan ? <Spinner className="mr-2"/> : <ListTodo className="mr-2" />}
-                        {isCreatingPlan ? 'Generating...' : 'Create Action Plan'}
-                    </Button>
-                )}
-            </div>
+            <Card className="bg-card/60 backdrop-blur-sm border-border/50 shadow-xl shadow-black/20">
+                <CardHeader>
+                    <CardTitle className="font-headline text-2xl text-primary">Next Steps</CardTitle>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-6">
+                    <div className="flex flex-col items-center text-center p-6 bg-background/50 rounded-lg border border-border hover:border-primary/50 transition-colors">
+                        <ListTodo className="h-10 w-10 text-primary mb-4" />
+                        <h3 className="font-semibold text-lg mb-2 text-foreground">Create Action Plan</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                           Generate a checklist of actionable tasks based on the AI analysis and your conversation history.
+                        </p>
+                         <Button onClick={handleCreateActionPlan} disabled={isCreatingPlan}>
+                            {isCreatingPlan ? <Spinner className="mr-2"/> : <ChevronRight className="mr-2" />}
+                            {isCreatingPlan ? 'Generating...' : 'Generate Plan'}
+                        </Button>
+                    </div>
+
+                     <div className="flex flex-col items-center text-center p-6 bg-background/50 rounded-lg border border-border hover:border-primary/50 transition-colors">
+                        <Rocket className="h-10 w-10 text-primary mb-4" />
+                        <h3 className="font-semibold text-lg mb-2 text-foreground">Enter Virtual Hearing</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                           Engage in a realistic, simulated hearing to test your arguments, practice cross-examination, and get real-time coaching.
+                        </p>
+                         <Button onClick={() => router.push(`/project/${projectId}/simulation`)}>
+                             <ChevronRight className="mr-2" /> Start Simulation
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
 
             {project.actionPlan && (
                 <ActionChecklist

@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import type { SimulationState } from './simulation-types';
 
 // For Adversarial Playbook
 const CounterRebuttalSchema = z.object({
@@ -89,6 +90,7 @@ export type Project = {
   analysis?: z.infer<typeof AnalysisDashboardSchema>;
   actionPlan?: ActionItem[];
   mainChatHistory?: ChatMessage[];
+  simulationState?: SimulationState;
 };
 
 export type Analysis = z.infer<typeof AnalysisDashboardSchema>;

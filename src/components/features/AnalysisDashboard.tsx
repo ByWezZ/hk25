@@ -9,12 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, ThumbsDown, Scale, ShieldQuestion, ChevronRight, MessageCircle } from 'lucide-react';
 import { LegalCaseModal } from './LegalCaseModal';
-import dynamic from 'next/dynamic';
-
-const ExportButtons = dynamic(() => import('./ExportButtons').then(mod => mod.ExportButtons), {
-  ssr: false,
-  loading: () => <div className="h-[36px] w-[150px]"></div>
-});
 
 
 type AnalysisDashboardProps = {
@@ -150,7 +144,6 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
                 <div className="p-2 bg-secondary rounded-lg"><ShieldQuestion className="h-6 w-6 text-purple-400" /></div>
                 <CardTitle className="font-headline text-2xl text-purple-400">Adversarial Playbook</CardTitle>
             </div>
-            <ExportButtons />
         </CardHeader>
         <CardContent id="playbook-content">
             <div className="space-y-4">

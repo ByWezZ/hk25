@@ -16,6 +16,9 @@ import { generateAdversarialPlaybook as generateAdversarialPlaybookFlow } from '
 import type { GenerateAdversarialPlaybookInput, GenerateAdversarialPlaybookOutput } from '@/ai/flows/generate-adversarial-playbook';
 import { generateProjectName as generateProjectNameFlow } from '@/ai/flows/generate-project-name';
 import type { GenerateProjectNameInput, GenerateProjectNameOutput } from '@/ai/flows/generate-project-name';
+import { runSimulation as runSimulationFlow } from '@/ai/flows/run-simulation';
+import type { RunSimulationInput, RunSimulationOutput } from '@/ai/flows/run-simulation';
+
 
 export async function generateAnalysis(
   input: GenerateAnalysisInput
@@ -63,4 +66,10 @@ export async function generateProjectName(
   input: GenerateProjectNameInput
 ): Promise<GenerateProjectNameOutput> {
   return await generateProjectNameFlow(input);
+}
+
+export async function runSimulation(
+  input: RunSimulationInput
+): Promise<RunSimulationOutput> {
+    return await runSimulationFlow(input);
 }
