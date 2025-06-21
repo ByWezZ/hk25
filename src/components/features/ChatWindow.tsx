@@ -98,7 +98,7 @@ export function ChatWindow({ isOpen, onOpenChange, project, onProjectUpdate }: C
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:w-[540px] bg-slate-950 border-l border-slate-800 flex flex-col">
+      <SheetContent className="w-full sm:w-[540px] bg-slate-950/80 backdrop-blur-md border-slate-800 flex flex-col">
         <SheetHeader>
           <SheetTitle className="font-headline text-primary">Chat with Arbiter</SheetTitle>
           <SheetDescription>Discuss the case analysis directly with the AI.</SheetDescription>

@@ -50,7 +50,7 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[625px] bg-card border-slate-800 text-slate-100">
+      <DialogContent className="sm:max-w-[625px] bg-slate-950/80 backdrop-blur-md border-slate-800 text-slate-100">
         <DialogHeader>
           <DialogTitle className="font-headline text-primary">{caseName}</DialogTitle>
           <DialogDescription>AI-Generated Summary & Source Data</DialogDescription>

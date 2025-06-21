@@ -67,7 +67,7 @@ export function StrategyForm({ onSubmit }: StrategyFormProps) {
     <Card className="w-full max-w-4xl mx-auto bg-transparent border-0 shadow-none animate-fade-in">
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-4xl text-foreground">Submit Your Strategy</CardTitle>
-        <CardDescription className="text-lg pt-2">
+        <CardDescription className="text-lg pt-2 text-slate-400">
           Paste your case facts and initial strategy below to begin the analysis.
         </CardDescription>
       </CardHeader>
@@ -75,7 +75,7 @@ export function StrategyForm({ onSubmit }: StrategyFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <Textarea
             placeholder="Describe your case facts, legal arguments, and desired outcomes..."
-            className="min-h-[300px] text-base bg-card/60 backdrop-blur-sm focus-visible:ring-1"
+            className="min-h-[300px] text-base bg-slate-900/60 backdrop-blur-sm focus-visible:ring-1 border-slate-800"
             value={strategy}
             onChange={(e) => setStrategy(e.target.value)}
             disabled={isSubmitting}

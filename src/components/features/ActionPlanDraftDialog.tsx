@@ -61,7 +61,7 @@ export function ActionPlanDraftDialog({ isOpen, onClose, items, onConfirm }: Act
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl h-[80vh] bg-card border-slate-800 text-slate-100 flex flex-col">
+      <DialogContent className="sm:max-w-2xl h-[80vh] bg-slate-950/80 backdrop-blur-md border-slate-800 text-slate-100 flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl text-primary">Draft Your Action Plan</DialogTitle>
           <DialogDescription>Review, edit, and add tasks before finalizing your plan.</DialogDescription>

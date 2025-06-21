@@ -101,7 +101,7 @@ export function ScopedChatDialog({ item, onClose, onUpdate }: ScopedChatDialogPr
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[625px] h-[80vh] bg-slate-950 border-slate-800 text-slate-100 flex flex-col">
+      <DialogContent className="sm:max-w-[625px] h-[80vh] bg-slate-950/80 backdrop-blur-md border-slate-800 text-slate-100 flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-headline text-primary">Discuss: {item.text}</DialogTitle>
           <DialogDescription>
