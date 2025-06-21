@@ -6,8 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, TrendingUp, ThumbsDown, Gavel, Scale, FileText, Download, ShieldQuestion } from 'lucide-react';
+import { Lightbulb, TrendingUp, ThumbsDown, Gavel, Scale, FileText, ShieldQuestion } from 'lucide-react';
 import { LegalCaseModal } from './LegalCaseModal';
+import dynamic from 'next/dynamic';
+
+const ExportButtons = dynamic(() => import('./ExportButtons').then(mod => mod.ExportButtons), {
+  ssr: false,
+  loading: () => <div className="h-[36px] w-[150px]"></div>
+});
+
 
 type AnalysisDashboardProps = {
   analysis: Analysis;
@@ -23,42 +30,6 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
   };
   
   const predictiveAnalysis = analysis.arbiterSynthesis.predictiveAnalysis;
-
-  const exportToPdf = async () => {
-    const { default: jsPDF } = await import('jspdf');
-    const doc = new jsPDF();
-    const content = document.getElementById('playbook-content');
-    if (content) {
-      doc.html(content, {
-        callback: function (doc) {
-          doc.save('Adversarial-Playbook.pdf');
-        },
-        x: 10,
-        y: 10,
-        width: 180,
-        windowWidth: 800
-      });
-    }
-  };
-
-  const exportToWord = async () => {
-    const { asBlob } = await import('html-to-docx');
-    const { saveAs } = await import('file-saver');
-
-    const contentElement = document.getElementById('playbook-content');
-    if (contentElement) {
-      const htmlString = `
-        <!DOCTYPE html>
-        <html>
-        <head><title>Adversarial Playbook</title></head>
-        <body>${contentElement.innerHTML}</body>
-        </html>
-      `;
-
-      const data = await asBlob(htmlString);
-      saveAs(data, 'Adversarial-Playbook.docx');
-    }
-  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 animate-fade-in">
@@ -171,10 +142,7 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
                 <div className="p-2 bg-purple-900/50 rounded-lg"><ShieldQuestion className="h-6 w-6 text-purple-300" /></div>
                 <CardTitle className="font-headline text-2xl text-purple-300">Adversarial Playbook</CardTitle>
             </div>
-            <div className="flex items-center gap-2 pt-2">
-                <Button onClick={exportToPdf} variant="outline" size="sm"><Download className="mr-2 h-3 w-3" /> PDF</Button>
-                <Button onClick={exportToWord} variant="outline" size="sm"><Download className="mr-2 h-3 w-3" /> Word</Button>
-            </div>
+            <ExportButtons />
         </CardHeader>
         <CardContent id="playbook-content">
             <div className="space-y-4">
