@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
-import type { Project, Analysis, ActionItem, ChatMessage } from '@/lib/types';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import type { Project } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/Spinner';
 import { StrategyForm } from '@/components/features/StrategyForm';
@@ -24,39 +24,45 @@ export default function ProjectPage() {
   const [loading, setLoading] = useState(true);
   const [analysisLoading, setAnalysisLoading] = useState(false);
 
-  const projectDocRef = user && projectId ? doc(db, 'users', user.uid, 'projects', projectId as string) : null;
-
-  const fetchProject = useCallback(async () => {
-    if (projectDocRef) {
-      setLoading(true);
-      try {
-        const docSnap = await getDoc(projectDocRef);
-        if (docSnap.exists()) {
-          setProject({ id: docSnap.id, ...docSnap.data() } as Project);
-        } else {
-          toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
-        }
-      } catch (error) {
-        console.error("Error fetching project:", error);
-        toast({ title: 'Error', description: 'Failed to fetch project data.', variant: 'destructive' });
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [projectDocRef, toast]);
-
   useEffect(() => {
-    fetchProject();
-  }, [fetchProject]);
+    const fetchProjectData = async () => {
+      if (user && projectId && db) {
+        const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
+        try {
+          const docSnap = await getDoc(projectDocRef);
+          if (docSnap.exists()) {
+            setProject({ id: docSnap.id, ...docSnap.data() } as Project);
+          } else {
+            toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
+            setProject(null);
+          }
+        } catch (error) {
+          console.error("Error fetching project:", error);
+          toast({ title: 'Error', description: 'Failed to fetch project data. Check your internet connection or Firebase setup.', variant: 'destructive' });
+          setProject(null);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+        if (user && projectId && !db) {
+          toast({ title: 'Offline Mode', description: 'Firebase is not configured. Project data is unavailable.', variant: 'destructive' });
+        }
+      }
+    };
+
+    fetchProjectData();
+  }, [user, projectId, toast]);
 
   const handleStrategySubmit = async (strategy: string) => {
-    if (!projectDocRef || !project) return;
+    if (!user || !projectId || !db || !project) return;
     
     setAnalysisLoading(true);
     try {
       const result = await generateAnalysis({ legalStrategy: strategy });
       const newAnalysis = result.analysisDashboard;
 
+      const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
       await updateDoc(projectDocRef, {
         strategy,
         analysis: newAnalysis,
@@ -82,7 +88,7 @@ export default function ProjectPage() {
   }
 
   if (!project) {
-    return <div className="container py-8 text-center">Project not found.</div>;
+    return <div className="container py-8 text-center">Project could not be loaded. Please ensure Firebase is configured and you have an internet connection.</div>;
   }
 
   return (
