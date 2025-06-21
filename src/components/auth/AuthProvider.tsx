@@ -1,49 +1,61 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { Spinner } from '@/components/Spinner';
+
+// A mock user object for demonstration purposes.
+const mockUser = {
+  uid: 'mock-user-123',
+  email: 'test@tribunal.genesis',
+  displayName: 'Test User',
+  photoURL: `https://placehold.co/40x40.png`,
+  // The rest of the properties are to satisfy the 'User' type from firebase/auth
+  emailVerified: true,
+  isAnonymous: false,
+  metadata: {},
+  providerData: [],
+  providerId: 'mock',
+  tenantId: null,
+  delete: async () => {},
+  getIdToken: async () => 'mock-token',
+  getIdTokenResult: async () => ({ token: 'mock-token' } as any),
+  reload: async () => {},
+  toJSON: () => ({}),
+} as User;
+
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  login: () => void;
+  logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  loading: true,
+  loading: false,
+  login: () => {},
+  logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // loading is false because we don't have an async check on startup.
+  const [loading, setLoading] = useState(false); 
 
-  useEffect(() => {
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+  const login = useCallback(() => {
+    setUser(mockUser);
+  }, []);
+  
+  const logout = useCallback(() => {
+    setUser(null);
   }, []);
 
-  const value = { user, loading };
+  const value = { user, loading, login, logout };
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? (
-        <div className="flex h-screen items-center justify-center">
-          <Spinner size="lg" />
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 }

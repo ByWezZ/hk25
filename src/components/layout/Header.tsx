@@ -1,11 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
 import { LogOut, Scale } from 'lucide-react';
 
 import { useAuth } from '@/components/auth/AuthProvider';
-import { auth } from '@/lib/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,15 +16,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function Header() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
-    if (!auth) {
-      console.error("Firebase not configured. Cannot sign out.");
-      return;
-    }
-    await signOut(auth);
+    logout();
     router.push('/login');
   };
 
