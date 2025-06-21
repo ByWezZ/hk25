@@ -1,9 +1,15 @@
-import type {GenerateAnalysisOutput} from '@/ai/flows/generate-analysis';
 import {z} from 'zod';
+
+// For Adversarial Playbook
+const CounterRebuttalSchema = z.object({
+  counterRebuttal: z.string().describe("A potential counter-rebuttal the opposing counsel might use against our rebuttal."),
+  strength: z.enum(["High", "Medium", "Low"]).describe("The estimated strength of this counter-rebuttal.")
+});
 
 const RebuttalSchema = z.object({
   rebuttal: z.string().describe('A potential rebuttal to the counter-argument.'),
   citations: z.array(z.string()).describe('Case citations to support the rebuttal.'),
+  potentialCounterRebuttals: z.array(CounterRebuttalSchema).describe("A list of potential counter-rebuttals the opponent might use in response to our rebuttal.")
 });
 
 const CounterArgumentSchema = z.object({
@@ -20,19 +26,77 @@ export const AdversarialPlaybookSchema = z.object({
     ),
 });
 
+
+// For Main Analysis
+export const GenerateAnalysisInputSchema = z.object({
+  legalStrategy: z.string().describe('The legal strategy to be analyzed, including case facts and initial arguments.'),
+});
+
+export const CaseCitationSchema = z.object({
+    citation: z.string().describe("The name of the cited case."),
+    relevance: z.string().describe("A detailed explanation of how this case supports the argument, including the specific context and linkage to the user's case.")
+});
+
+export const LegalArgumentSchema = z.object({
+  argument: z.string().describe('A deep, well-reasoned argument presented by the advocate.'),
+  caseCitations: z.array(CaseCitationSchema).describe('List of case citations used to support the argument, each with a relevance explanation.'),
+});
+
+export const WeaknessSchema = z.object({
+  weakness: z.string().describe('Identified weakness in the advocate’s argument.'),
+  vulnerabilityScore: z.number().describe('A numerical score from 1-10 indicating the severity of the vulnerability (1=low, 10=high).'),
+  rationale: z.string().describe("A detailed rationale explaining why this specific vulnerability score was given.")
+});
+
+export const AdversaryRebuttalSchema = z.object({
+  rebuttal: z.string().describe('The adversary’s detailed rebuttal to the advocate’s argument.'),
+  weaknesses: z.array(WeaknessSchema).describe('List of weaknesses identified in the argument, each with a score and rationale.'),
+});
+
+export const KeyVulnerabilitySchema = z.object({
+  vulnerability: z.string().describe('A key vulnerability identified in the legal strategy.'),
+  affectedArguments: z.array(z.string()).describe('List of arguments that are affected by this vulnerability.'),
+});
+
+export const RefinedStrategySchema = z.object({
+  recommendation: z.string().describe('A recommendation to refine the legal strategy.'),
+  rationale: z.string().describe('The rationale behind the refined strategy recommendation.'),
+});
+
+export const PredictiveAnalysisSchema = z.object({
+  outcomePrediction: z.string().describe('Prediction of the case outcome based on the analysis.'),
+  confidenceLevel: z.number().describe('A numerical score indicating the confidence level of the prediction.'),
+});
+
+export const ArbiterSynthesisSchema = z.object({
+    keyVulnerabilities: z.array(KeyVulnerabilitySchema).describe('Key vulnerabilities identified in the legal strategy.'),
+    refinedStrategy: z.array(RefinedStrategySchema).describe('Recommendations for refining the legal strategy.'),
+    predictiveAnalysis: PredictiveAnalysisSchema.describe('Predictive analysis of the case outcome.'),
+});
+
+export const ThreePartAnalysisSchema = z.object({
+  advocateBrief: z.array(LegalArgumentSchema).describe('The advocate’s initial arguments and case citations.'),
+  adversaryRebuttal: z.array(AdversaryRebuttalSchema).describe('The adversary’s rebuttals to the advocate’s arguments.'),
+  arbiterSynthesis: ArbiterSynthesisSchema.describe('The arbiter’s synthesis of the arguments and rebuttals.'),
+});
+
+export const AnalysisDashboardSchema = ThreePartAnalysisSchema.extend({
+  adversarialPlaybook: AdversarialPlaybookSchema.describe('An adversarial playbook with counter-arguments and rebuttals.'),
+});
+
+// Main Project Type
 export type Project = {
   id: string;
   name: string;
   userId: string;
   createdAt: any;
   strategy?: string;
-  analysis?: Analysis;
+  analysis?: z.infer<typeof AnalysisDashboardSchema>;
   actionPlan?: ActionItem[];
   mainChatHistory?: ChatMessage[];
 };
 
-export type Analysis = GenerateAnalysisOutput['analysisDashboard'];
-
+export type Analysis = z.infer<typeof AnalysisDashboardSchema>;
 export type AdversarialPlaybook = z.infer<typeof AdversarialPlaybookSchema>;
 export type AdversarialPlaybookData = AdversarialPlaybook;
 

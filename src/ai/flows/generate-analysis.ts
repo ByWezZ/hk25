@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -5,65 +6,13 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import {generateAdversarialPlaybook} from './generate-adversarial-playbook';
-import {AdversarialPlaybookSchema} from '@/lib/types';
+import { ThreePartAnalysisSchema, AnalysisDashboardSchema, GenerateAnalysisInputSchema } from '@/lib/types';
+import type { Analysis } from '@/lib/types';
 
-const GenerateAnalysisInputSchema = z.object({
-  legalStrategy: z.string().describe('The legal strategy to be analyzed, including case facts and initial arguments.'),
-});
 export type GenerateAnalysisInput = z.infer<typeof GenerateAnalysisInputSchema>;
-
-const LegalArgumentSchema = z.object({
-  argument: z.string().describe('The argument presented by the advocate.'),
-  caseCitations: z.array(z.string()).describe('List of case citations used to support the argument.'),
-});
-
-const WeaknessSchema = z.object({
-  weakness: z.string().describe('Identified weakness in the advocate’s argument.'),
-  vulnerabilityScore: z.number().describe('A numerical score indicating the severity of the vulnerability.'),
-});
-
-const RebuttalSchema = z.object({
-  rebuttal: z.string().describe('The adversary’s rebuttal to the advocate’s argument.'),
-  weaknesses: z.array(WeaknessSchema).describe('List of weaknesses identified in the argument.'),
-});
-
-const KeyVulnerabilitySchema = z.object({
-  vulnerability: z.string().describe('A key vulnerability identified in the legal strategy.'),
-  affectedArguments: z.array(z.string()).describe('List of arguments that are affected by this vulnerability.'),
-});
-
-const RefinedStrategySchema = z.object({
-  recommendation: z.string().describe('A recommendation to refine the legal strategy.'),
-  rationale: z.string().describe('The rationale behind the refined strategy recommendation.'),
-});
-
-const PredictiveAnalysisSchema = z.object({
-  outcomePrediction: z.string().describe('Prediction of the case outcome based on the analysis.'),
-  confidenceLevel: z.number().describe('A numerical score indicating the confidence level of the prediction.'),
-});
-
-const ThreePartAnalysisSchema = z.object({
-  advocateBrief: z.array(LegalArgumentSchema).describe('The advocate’s initial arguments and case citations.'),
-  adversaryRebuttal: z.array(RebuttalSchema).describe('The adversary’s rebuttals to the advocate’s arguments.'),
-  arbiterSynthesis: z
-    .object({
-      keyVulnerabilities: z.array(KeyVulnerabilitySchema).describe('Key vulnerabilities identified in the legal strategy.'),
-      refinedStrategy: z.array(RefinedStrategySchema).describe('Recommendations for refining the legal strategy.'),
-      predictiveAnalysis: PredictiveAnalysisSchema.describe('Predictive analysis of the case outcome.'),
-    })
-    .describe('The arbiter’s synthesis of the arguments and rebuttals.'),
-});
-
-const AnalysisDashboardSchema = ThreePartAnalysisSchema.extend({
-  adversarialPlaybook: AdversarialPlaybookSchema.describe('An adversarial playbook with counter-arguments and rebuttals.'),
-});
-
-const GenerateAnalysisOutputSchema = z.object({
-  analysisDashboard: AnalysisDashboardSchema.describe('A structured analysis dashboard of the legal strategy.'),
-});
-export type GenerateAnalysisOutput = z.infer<typeof GenerateAnalysisOutputSchema>;
+export type GenerateAnalysisOutput = { analysisDashboard: Analysis };
 
 export async function generateAnalysis(input: GenerateAnalysisInput): Promise<GenerateAnalysisOutput> {
   return generateAnalysisFlow(input);
@@ -73,17 +22,35 @@ const threePartAnalysisPrompt = ai.definePrompt({
   name: 'threePartAnalysisPrompt',
   input: {schema: GenerateAnalysisInputSchema},
   output: {schema: ThreePartAnalysisSchema},
-  prompt: `You are a highly skilled AI legal analyst. You are tasked with providing a comprehensive analysis of a legal strategy.
-  Analyze the provided legal strategy and identify potential weaknesses and suggest improvements.
-  Legal Strategy: {{{legalStrategy}}}
-  Output a structured analysis in JSON format with three parts: Advocate's Brief, Adversary's Rebuttal, and Arbiter's Synthesis.`,
+  prompt: `You are a world-class AI legal analyst with deep expertise in international arbitration. Your task is to provide an exceptionally detailed, multi-faceted analysis of a legal strategy. Be rigorous, insightful, and think several steps ahead.
+
+  Legal Strategy to Analyze:
+  {{{legalStrategy}}}
+
+  Produce a structured analysis in JSON format with three distinct parts:
+
+  1.  **Advocate's Brief:**
+      *   Formulate the most compelling and sophisticated arguments for the provided strategy. Go beyond the surface level.
+      *   For each argument, provide at least two supporting case citations.
+      *   **Crucially, for each citation, provide a detailed 'relevance' explanation:** Detail which part of the cited case is relevant, how it directly supports the specific argument, and how it links to the user's current case facts.
+
+  2.  **Adversary's Rebuttal:**
+      *   Identify every significant weakness in the advocate’s arguments.
+      *   For each weakness, provide a 'vulnerabilityScore' from 1 (minor) to 10 (critical).
+      *   **Provide a detailed 'rationale' for each score:** Justify why you assigned that specific score, considering its potential impact on the case.
+
+  3.  **Arbiter's Synthesis:**
+      *   Identify the absolute 'keyVulnerabilities' that are most likely to be dispositive.
+      *   Provide a 'refinedStrategy' with concrete recommendations to mitigate these vulnerabilities.
+      *   Offer a 'predictiveAnalysis' of the case outcome and your confidence level.
+  `,
 });
 
 const generateAnalysisFlow = ai.defineFlow(
   {
     name: 'generateAnalysisFlow',
     inputSchema: GenerateAnalysisInputSchema,
-    outputSchema: GenerateAnalysisOutputSchema,
+    outputSchema: z.object({ analysisDashboard: AnalysisDashboardSchema }),
   },
   async input => {
     // Run the three-part analysis and the playbook generation in parallel

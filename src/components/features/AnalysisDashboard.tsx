@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, TrendingUp, ThumbsDown, Gavel, Scale, FileText, ShieldQuestion } from 'lucide-react';
+import { Lightbulb, TrendingUp, ThumbsDown, Gavel, Scale, FileText, ShieldQuestion, ChevronRight, MessageCircle } from 'lucide-react';
 import { LegalCaseModal } from './LegalCaseModal';
 import dynamic from 'next/dynamic';
 
@@ -24,11 +24,20 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
   const [modalCase, setModalCase] = useState<string | null>(null);
   
   const getVulnerabilityColor = (score: number) => {
-    if (score >= 8) return 'bg-red-500/80';
-    if (score >= 5) return 'bg-orange-500/80';
-    return 'bg-yellow-500/80';
+    if (score >= 8) return 'bg-red-500/80 border-red-400/50';
+    if (score >= 5) return 'bg-orange-500/80 border-orange-400/50';
+    return 'bg-yellow-500/80 border-yellow-400/50';
   };
   
+  const getCounterRebuttalStrengthColor = (strength: "High" | "Medium" | "Low") => {
+    switch (strength) {
+      case "High": return "text-red-400";
+      case "Medium": return "text-orange-400";
+      case "Low": return "text-yellow-400";
+      default: return "text-slate-400";
+    }
+  }
+
   const predictiveAnalysis = analysis.arbiterSynthesis.predictiveAnalysis;
 
   return (
@@ -47,23 +56,23 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
               <AccordionItem value={`item-${index}`} key={index} className="border-slate-800">
                 <AccordionTrigger className="text-slate-200 hover:no-underline text-left">{item.argument}</AccordionTrigger>
                 <AccordionContent>
-                  <div className="pl-4 border-l-2 border-blue-500/30">
-                    <p className="font-semibold text-sm mb-2 text-slate-300">Case Citations:</p>
+                  <p className="font-semibold text-sm mb-2 text-slate-300">Case Citations & Relevance:</p>
+                  <div className="space-y-4">
                     {item.caseCitations.length > 0 ? (
-                       <div className="flex flex-col items-start space-y-1">
-                        {item.caseCitations.map((citation, i) => (
-                          <Button
-                            key={i}
-                            variant="link"
-                            className="p-0 h-auto font-normal text-base text-blue-400 hover:text-blue-300 text-left"
-                            onClick={() => setModalCase(citation)}
-                          >
-                            {citation}
-                          </Button>
-                        ))}
-                      </div>
+                       item.caseCitations.map((citation, i) => (
+                          <div key={i} className="pl-4 border-l-2 border-blue-500/30">
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto font-normal text-base text-blue-400 hover:text-blue-300 text-left mb-1"
+                              onClick={() => setModalCase(citation.citation)}
+                            >
+                              {citation.citation}
+                            </Button>
+                            <p className="text-sm text-muted-foreground">{citation.relevance}</p>
+                          </div>
+                        ))
                     ) : (
-                      <p className="text-sm text-muted-foreground">No cases cited.</p>
+                      <p className="text-sm text-muted-foreground pl-4 border-l-2 border-blue-500/30">No cases cited.</p>
                     )}
                   </div>
                 </AccordionContent>
@@ -84,17 +93,22 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
         <CardContent>
           <div className="space-y-4">
             {analysis.adversaryRebuttal.map((item, index) => (
-              <div key={index} className="p-4 bg-red-950/20 rounded-lg border border-red-500/20">
-                <p className="font-semibold text-slate-200">{item.rebuttal}</p>
-                {item.weaknesses.map((weakness, i) => (
-                  <div key={i} className="mt-3 pl-4 border-l-2 border-red-500/30">
-                    <p className="text-sm text-red-200">{weakness.weakness}</p>
-                    <Badge className={`mt-2 text-white ${getVulnerabilityColor(weakness.vulnerabilityScore)}`}>
-                      Vulnerability Score: {weakness.vulnerabilityScore}/10
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+              <Accordion key={index} type="single" collapsible className="p-4 bg-red-950/20 rounded-lg border border-red-500/20">
+                 <AccordionItem value={`rebuttal-${index}`} className="border-none">
+                    <AccordionTrigger className="font-semibold text-slate-200 hover:no-underline py-0">{item.rebuttal}</AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                      {item.weaknesses.map((weakness, i) => (
+                        <div key={i} className="mt-3 pl-4 border-l-2 border-red-500/30">
+                          <p className="text-sm text-red-200">{weakness.weakness}</p>
+                           <Badge variant="outline" className={`mt-2 ${getVulnerabilityColor(weakness.vulnerabilityScore)}`}>
+                            Vulnerability Score: {weakness.vulnerabilityScore}/10
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-2">{weakness.rationale}</p>
+                        </div>
+                      ))}
+                    </AccordionContent>
+                 </AccordionItem>
+              </Accordion>
             ))}
           </div>
         </CardContent>
@@ -150,34 +164,55 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
                     <h4 className="font-semibold text-purple-200 mb-2">Opponent Counsel Analysis</h4>
                     <p className="text-sm text-slate-300">{analysis.adversarialPlaybook.opponentCounselAnalysis}</p>
                 </div>
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="multiple" className="w-full">
                     {analysis.adversarialPlaybook.potentialCounterArguments.map((item, index) => (
-                    <AccordionItem value={`counter-${index}`} key={index} className="border-slate-700">
-                        <AccordionTrigger className="text-slate-200 hover:no-underline text-left">{item.counterArgument}</AccordionTrigger>
-                        <AccordionContent>
-                        <div className="pl-4 border-l-2 border-purple-500/30 space-y-3">
-                            {item.rebuttals.map((rebuttal, rIndex) => (
+                      <AccordionItem value={`counter-${index}`} key={index} className="border-slate-700">
+                          <AccordionTrigger className="text-slate-200 hover:no-underline text-left">{item.counterArgument}</AccordionTrigger>
+                          <AccordionContent>
+                            <div className="pl-4 border-l-2 border-purple-500/30 space-y-4">
+                              {item.rebuttals.map((rebuttal, rIndex) => (
                                 <div key={rIndex}>
-                                    <p className="font-semibold text-sm text-slate-300">{rebuttal.rebuttal}</p>
-                                     {rebuttal.citations.length > 0 && (
-                                        <div className="flex flex-col items-start space-y-1 mt-1">
-                                            {rebuttal.citations.map((citation, cIndex) => (
-                                                <Button
-                                                    key={cIndex}
-                                                    variant="link"
-                                                    className="p-0 h-auto font-normal text-sm text-blue-400 hover:text-blue-300"
-                                                    onClick={() => setModalCase(citation)}
-                                                >
-                                                    {citation}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    )}
+                                  <p className="font-semibold text-sm text-slate-300 flex items-center"><MessageCircle className="h-4 w-4 mr-2" /> Our Rebuttal</p>
+                                  <p className="text-sm text-slate-300/90 mt-1">{rebuttal.rebuttal}</p>
+
+                                  {rebuttal.potentialCounterRebuttals.length > 0 && (
+                                    <div className="mt-3 pl-4 border-l-2 border-slate-600/50">
+                                      <p className="font-semibold text-sm text-slate-400 mb-2">Potential Counter-Rebuttals:</p>
+                                      <ul className="space-y-2 text-sm">
+                                        {rebuttal.potentialCounterRebuttals.map((counter, cIndex) => (
+                                          <li key={cIndex} className="flex items-start gap-2">
+                                            <ChevronRight className="h-4 w-4 mt-0.5 shrink-0" />
+                                            <div>
+                                              <span className={getCounterRebuttalStrengthColor(counter.strength)}>({counter.strength} Strength)</span>
+                                              <span className="text-slate-400/90 ml-1">{counter.counterRebuttal}</span>
+                                            </div>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {rebuttal.citations.length > 0 && (
+                                    <div className="mt-3">
+                                      <p className="font-semibold text-xs text-slate-400 mb-1">Citations:</p>
+                                      <div className="flex flex-col items-start space-y-1">
+                                          {rebuttal.citations.map((citation, cIndex) => (
+                                              <Button
+                                                  key={cIndex}
+                                                  variant="link"
+                                                  className="p-0 h-auto font-normal text-xs text-blue-400 hover:text-blue-300"
+                                                  onClick={() => setModalCase(citation)}
+                                              >
+                                                  {citation}
+                                              </Button>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                            ))}
-                        </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                      </AccordionItem>
                     ))}
                 </Accordion>
             </div>
