@@ -44,17 +44,17 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 animate-fade-in">
       {/* Advocate's Brief */}
-      <Card className="bg-card/60 backdrop-blur-sm shadow-xl shadow-black/20 border-border">
+      <Card className="bg-card backdrop-blur-lg border shadow-xl shadow-black/20">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-secondary rounded-lg"><Scale className="h-6 w-6 text-primary" /></div>
-            <CardTitle className="font-headline text-2xl text-primary">Advocate's Brief</CardTitle>
+            <div className="p-2 bg-secondary rounded-lg"><Scale className="h-6 w-6 text-sky-400" /></div>
+            <CardTitle className="font-headline text-2xl text-sky-400">Advocate's Brief</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
             {analysis.advocateBrief.map((item, index) => (
-              <AccordionItem value={`item-${index}`} key={index} className="border-border">
+              <AccordionItem value={`item-${index}`} key={index} className="border-border/50">
                 <AccordionTrigger className="hover:no-underline text-left text-foreground">{item.argument}</AccordionTrigger>
                 <AccordionContent>
                   <p className="font-semibold text-sm mb-2 text-muted-foreground">Case Citations & Relevance:</p>
@@ -73,7 +73,7 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
                           </div>
                         ))
                     ) : (
-                      <p className="text-sm text-muted-foreground pl-4 border-l-2 border-border">No cases cited.</p>
+                      <p className="text-sm text-muted-foreground pl-4 border-l-2 border-border/50">No cases cited.</p>
                     )}
                   </div>
                 </AccordionContent>
@@ -84,17 +84,17 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
       </Card>
       
       {/* Identified Weaknesses */}
-      <Card className="bg-card/60 backdrop-blur-sm shadow-xl shadow-black/20 border-border">
+      <Card className="bg-card backdrop-blur-lg border shadow-xl shadow-black/20">
         <CardHeader>
            <div className="flex items-center gap-3">
-            <div className="p-2 bg-secondary rounded-lg"><ThumbsDown className="h-6 w-6 text-destructive" /></div>
-            <CardTitle className="font-headline text-2xl text-destructive">Identified Weaknesses</CardTitle>
+            <div className="p-2 bg-secondary rounded-lg"><ThumbsDown className="h-6 w-6 text-red-400" /></div>
+            <CardTitle className="font-headline text-2xl text-red-400">Identified Weaknesses</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {analysis.identifiedWeaknesses.map((weakness, index) => (
-                <div key={index} className="p-4 bg-background/50 rounded-lg border border-destructive/20">
+                <div key={index} className="p-4 bg-background/50 rounded-lg border border-white/10">
                     <p className="font-semibold text-foreground">{weakness.weakness}</p>
                     <div className="flex items-center justify-between mt-2">
                         <Badge variant="outline" className={`mt-2 ${getVulnerabilityColor(weakness.vulnerabilityScore)}`}>
@@ -109,16 +109,16 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
       </Card>
 
       {/* Arbiter's Synthesis */}
-      <Card className="bg-card/60 backdrop-blur-sm shadow-xl shadow-black/20 border-border">
+      <Card className="bg-card backdrop-blur-lg border shadow-xl shadow-black/20">
         <CardHeader>
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-secondary rounded-lg"><Lightbulb className="h-6 w-6 text-amber-300" /></div>
-            <CardTitle className="font-headline text-2xl text-amber-300">Arbiter's Synthesis</CardTitle>
+             <div className="p-2 bg-secondary rounded-lg"><Lightbulb className="h-6 w-6 text-amber-400" /></div>
+            <CardTitle className="font-headline text-2xl text-amber-400">Arbiter's Synthesis</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-300"><Lightbulb className="h-5 w-5"/>Key Vulnerabilities</h4>
+            <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-400"><Lightbulb className="h-5 w-5"/>Key Vulnerabilities</h4>
             <ul className="list-disc list-inside space-y-1 text-sm text-foreground">
               {analysis.arbiterSynthesis.keyVulnerabilities.map((item, index) => (
                 <li key={index}>{item.vulnerability}</li>
@@ -126,7 +126,7 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
             </ul>
           </div>
            <div>
-            <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-300"><TrendingUp className="h-5 w-5"/>Refined Strategy</h4>
+            <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-400"><TrendingUp className="h-5 w-5"/>Refined Strategy</h4>
             <ul className="list-disc list-inside space-y-1 text-sm text-foreground">
               {analysis.arbiterSynthesis.refinedStrategy.map((item, index) => (
                 <li key={index}>{item.recommendation} - <span className="text-muted-foreground">{item.rationale}</span></li>
@@ -134,7 +134,7 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
             </ul>
           </div>
           <div>
-             <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-300"><TrendingUp className="h-5 w-5"/>Predictive Analysis</h4>
+             <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-400"><TrendingUp className="h-5 w-5"/>Predictive Analysis</h4>
             <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-amber-500/20">
                 <span className="text-foreground">{predictiveAnalysis.outcomePrediction}</span>
                 <Badge className="bg-amber-500 text-white">Confidence: {Math.round(predictiveAnalysis.confidenceLevel * 100)}%</Badge>
@@ -144,11 +144,11 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
       </Card>
 
       {/* Adversarial Playbook */}
-      <Card className="bg-card/60 backdrop-blur-sm shadow-xl shadow-black/20 border-border lg:col-span-2 xl:col-span-1">
+      <Card className="bg-card backdrop-blur-lg border shadow-xl shadow-black/20 lg:col-span-2 xl:col-span-1">
         <CardHeader>
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-secondary rounded-lg"><ShieldQuestion className="h-6 w-6 text-purple-300" /></div>
-                <CardTitle className="font-headline text-2xl text-purple-300">Adversarial Playbook</CardTitle>
+                <div className="p-2 bg-secondary rounded-lg"><ShieldQuestion className="h-6 w-6 text-purple-400" /></div>
+                <CardTitle className="font-headline text-2xl text-purple-400">Adversarial Playbook</CardTitle>
             </div>
             <ExportButtons />
         </CardHeader>
@@ -160,7 +160,7 @@ export function AnalysisDashboard({ analysis }: AnalysisDashboardProps) {
                 </div>
                 <Accordion type="multiple" className="w-full">
                     {analysis.adversarialPlaybook.potentialCounterArguments.map((item, index) => (
-                      <AccordionItem value={`counter-${index}`} key={index} className="border-border">
+                      <AccordionItem value={`counter-${index}`} key={index} className="border-border/50">
                           <AccordionTrigger className="hover:no-underline text-left text-foreground">{item.counterArgument}</AccordionTrigger>
                           <AccordionContent>
                             <div className="pl-4 border-l-2 border-purple-400/30 space-y-4">

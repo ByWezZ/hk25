@@ -26,9 +26,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-transparent px-4">
-      <Card className="w-full max-w-md bg-card/60 backdrop-blur-sm border-slate-800/50 shadow-2xl shadow-black/40">
+      <Card className="w-full max-w-md bg-card backdrop-blur-lg border shadow-2xl shadow-black/40">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-4xl text-slate-100">DIALOGUE</CardTitle>
+          <CardTitle className="font-headline text-4xl text-foreground">DIALOGUE</CardTitle>
           <CardDescription>
             Your AI-Powered Strategic Co-Counsel
           </CardDescription>
