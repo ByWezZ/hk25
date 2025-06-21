@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, getDocs, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, FileText } from 'lucide-react';
@@ -34,7 +34,9 @@ export default function DashboardPage() {
       };
       fetchProjects();
     } else {
-      setLoading(false);
+        // Handle case where db might not be available
+        setProjects([]);
+        setLoading(false);
     }
   }, [user]);
 
@@ -52,14 +54,18 @@ export default function DashboardPage() {
         console.error("Error creating new project:", error);
         setIsCreating(false);
       }
+    } else {
+        // If no db, just navigate to a new project page with a temporary ID.
+        // This won't be saved, but allows use of the app.
+        router.push(`/project/local-${Date.now()}`);
     }
   };
 
   return (
     <div className="container py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="font-headline text-3xl">My Projects</h1>
-        <Button onClick={createNewProject} disabled={isCreating || !db}>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="font-headline text-4xl text-slate-100">My Projects</h1>
+        <Button onClick={createNewProject} disabled={isCreating}>
           {isCreating ? <Spinner className="mr-2" /> : <PlusCircle className="mr-2 h-4 w-4" />}
           New Project
         </Button>
@@ -70,16 +76,16 @@ export default function DashboardPage() {
           <Spinner size="lg" />
         </div>
       ) : projects.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-12 bg-transparent border-dashed border-slate-700">
           <CardHeader>
             <div className="mx-auto bg-secondary rounded-full h-16 w-16 flex items-center justify-center mb-4">
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
-            <CardTitle>No Projects Yet</CardTitle>
-            <CardDescription>Get started by creating your first project.</CardDescription>
+            <CardTitle className="text-slate-200">No Projects Yet</CardTitle>
+            <CardDescription className="text-slate-400">Get started by creating your first project.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={createNewProject} disabled={isCreating || !db}>
+            <Button onClick={createNewProject} disabled={isCreating}>
               {isCreating ? <Spinner className="mr-2" /> : <PlusCircle className="mr-2 h-4 w-4" />}
               Create New Project
             </Button>
@@ -90,12 +96,12 @@ export default function DashboardPage() {
           {projects.map((project) => (
             <Card 
               key={project.id} 
-              className="hover:shadow-md hover:border-primary transition-all cursor-pointer"
+              className="bg-slate-900/50 border-slate-800 hover:border-primary hover:shadow-2xl hover:shadow-slate-800/20 transition-all cursor-pointer group"
               onClick={() => router.push(`/project/${project.id}`)}
             >
               <CardHeader>
-                <CardTitle className="truncate">{project.name}</CardTitle>
-                <CardDescription>
+                <CardTitle className="truncate text-slate-200 group-hover:text-primary transition-colors">{project.name}</CardTitle>
+                <CardDescription className="text-slate-400">
                   {project.createdAt?.toDate ? `Created ${formatDistanceToNow(project.createdAt.toDate())} ago` : 'Date not available'}
                 </CardDescription>
               </CardHeader>

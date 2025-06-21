@@ -41,12 +41,12 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-[625px] bg-slate-900 border-slate-800 text-slate-100">
         <DialogHeader>
-          <DialogTitle className="font-headline">{caseName}</DialogTitle>
+          <DialogTitle className="font-headline text-primary">{caseName}</DialogTitle>
           <DialogDescription>AI-Generated Case Summary</DialogDescription>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-4 max-h-[60vh] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-40">
               <Spinner />
@@ -55,7 +55,7 @@ export function LegalCaseModal({ caseName, onClose }: LegalCaseModalProps) {
           ) : error ? (
             <p className="text-destructive">{error}</p>
           ) : (
-            <p className="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
+            <p className="text-sm text-slate-300 whitespace-pre-wrap">{summary}</p>
           )}
         </div>
       </DialogContent>

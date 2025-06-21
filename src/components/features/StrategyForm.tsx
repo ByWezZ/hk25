@@ -23,32 +23,32 @@ export function StrategyForm({ onSubmit, isLoading }: StrategyFormProps) {
   };
 
   return (
-    <Card className="w-full shadow-lg">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl">Submit Your Strategy</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-4xl mx-auto bg-transparent border-0 shadow-none">
+      <CardHeader className="text-center">
+        <CardTitle className="font-headline text-4xl text-slate-100">Submit Your Strategy</CardTitle>
+        <CardDescription className="text-slate-400 text-lg pt-2">
           Paste your case facts and initial strategy below to begin the analysis.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <Textarea
             placeholder="Describe your case facts, legal arguments, and desired outcomes..."
-            className="min-h-[250px] text-base"
+            className="min-h-[300px] text-base bg-slate-900/70 border-slate-700 focus:ring-primary focus-visible:ring-1"
             value={strategy}
             onChange={(e) => setStrategy(e.target.value)}
             disabled={isLoading}
           />
-          <div className="flex justify-end">
+          <div className="flex justify-center">
             <Button type="submit" disabled={isLoading || !strategy.trim()} size="lg">
               {isLoading ? (
                 <>
                   <Spinner className="mr-2" />
-                  Simulating Tribunal...
+                  Analyzing...
                 </>
               ) : (
                 <>
-                  <Wand2 className="mr-2 h-4 w-4" />
+                  <Wand2 className="mr-2 h-5 w-5" />
                   Generate Analysis
                 </>
               )}

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
-  const { user, login } = useAuth();
+  const { user, login, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -18,29 +18,33 @@ export default function LoginPage() {
   }, [user, router]);
 
   const handleSignIn = () => {
-    login();
+    if (login) {
+      login();
+    }
   };
+  
+  if (loading) return null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-transparent px-4">
+      <Card className="w-full max-w-md border-slate-800 bg-black/20 shadow-2xl shadow-slate-900/50 backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Scale className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="font-headline text-3xl">Tribunal Genesis</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-headline text-4xl text-slate-100">Tribunal Genesis</CardTitle>
+          <CardDescription className="text-slate-400">
             Your AI-Powered Strategic Co-Counsel
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center space-y-6">
-            <p className="text-center text-sm text-muted-foreground">
-              Click below to log in and access your dashboard.
-            </p>
-            <Button onClick={handleSignIn} className="w-full" size="lg">
-              Log In
+          <div className="flex flex-col items-center space-y-6 pt-4">
+            <Button onClick={handleSignIn} className="w-full" size="lg" disabled={!login}>
+              Log In & Begin Analysis
             </Button>
+             <p className="px-8 text-center text-xs text-muted-foreground">
+              By logging in, you are accessing a secure environment. This is a demo using mock authentication.
+            </p>
           </div>
         </CardContent>
       </Card>
