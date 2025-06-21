@@ -50,6 +50,22 @@ export default function ProjectPage() {
       setProject(null);
       return;
     }
+
+    // Handle loading local projects from sessionStorage first
+    const localProjectData = sessionStorage.getItem('pendingLocalProject');
+    if (localProjectData) {
+      sessionStorage.removeItem('pendingLocalProject');
+      const parsedProject = JSON.parse(localProjectData);
+      // Ensure the project ID from session matches the URL
+      if (parsedProject.id === projectId) {
+        parsedProject.createdAt = new Date(parsedProject.createdAt);
+        setProject(parsedProject);
+        setProjectName(parsedProject.name);
+        setPageState('dashboard');
+        setLoading(false);
+        return;
+      }
+    }
     
     const fetchProjectData = async () => {
       setLoading(true);
@@ -103,11 +119,14 @@ export default function ProjectPage() {
           analysis: analysisResult.analysisDashboard,
           createdAt: new Date(),
         };
+
+        const serializableProject = {
+          ...localProject,
+          createdAt: localProject.createdAt.toISOString(),
+        };
+        sessionStorage.setItem('pendingLocalProject', JSON.stringify(serializableProject));
         
-        setProject(localProject);
-        setProjectName(localProject.name);
-        setPageState('dashboard');
-        router.replace(`/project/${localProject.id}`);
+        router.push(`/project/${localProject.id}`);
         return;
       }
 
