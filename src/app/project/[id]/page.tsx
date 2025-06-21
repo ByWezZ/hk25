@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,6 +9,7 @@ import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import type { Project, ActionItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/Spinner';
 import { StrategyForm } from '@/components/features/StrategyForm';
 import { ThinkingAnimation } from '@/components/features/ThinkingAnimation';
@@ -18,7 +20,7 @@ import { ScopedChatDialog } from '@/components/features/ScopedChatDialog';
 import { ActionPlanDraftDialog } from '@/components/features/ActionPlanDraftDialog';
 import { generateAnalysis, generateActionPlan } from '@/lib/actions';
 import { getAIErrorMessage } from '@/lib/utils';
-import { MessageSquare, ListTodo, BrainCircuit } from 'lucide-react';
+import { MessageSquare, ListTodo, Pencil } from 'lucide-react';
 
 type PageState = 'form' | 'thinking' | 'dashboard';
 
@@ -35,6 +37,9 @@ export default function ProjectPage() {
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [draftActionPlan, setDraftActionPlan] = useState<string[] | null>(null);
 
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [projectName, setProjectName] = useState('');
+
   useEffect(() => {
     const fetchProjectData = async () => {
       setLoading(true);
@@ -46,6 +51,7 @@ export default function ProjectPage() {
             if (docSnap.exists()) {
               const projectData = { id: docSnap.id, ...docSnap.data() } as Project;
               setProject(projectData);
+              setProjectName(projectData.name);
               setPageState(projectData.analysis ? 'dashboard' : 'form');
             } else {
               toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
@@ -56,12 +62,14 @@ export default function ProjectPage() {
             toast({ title: 'Error', description: 'Failed to fetch project data.', variant: 'destructive' });
           }
         } else {
-          setProject({
+          const localProject = {
             id: projectId as string,
             name: `Local Project`,
             userId: user.uid,
             createdAt: new Date(),
-          });
+          }
+          setProject(localProject);
+          setProjectName(localProject.name);
           setPageState('form');
         }
       }
@@ -132,14 +140,46 @@ export default function ProjectPage() {
   const handleActionItemUpdate = async (updatedItems: ActionItem[]) => {
     if (!project) return;
     
+    const originalActionPlan = project.actionPlan;
     const updatedProject = { ...project, actionPlan: updatedItems };
     setProject(updatedProject);
 
     if (db && user && !project.id.startsWith('local-')) {
       const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
-      await updateDoc(projectRef, { actionPlan: updatedItems });
+      try {
+        await updateDoc(projectRef, { actionPlan: updatedItems });
+      } catch (error) {
+        console.error("Failed to update action plan:", error);
+        toast({ title: 'Error', description: 'Failed to save action plan changes.', variant: 'destructive' });
+        setProject({ ...project, actionPlan: originalActionPlan }); // Revert on error
+      }
     }
   };
+
+  const handleNameSave = async () => {
+    if (!user || !projectId || !project || project.name === projectName) {
+        setIsEditingName(false);
+        return;
+    }
+
+    const originalName = project.name;
+    const updatedProjectData = { ...project, name: projectName };
+    setProject(updatedProjectData); // Optimistic update
+    setIsEditingName(false);
+
+    if (db && !project.id.startsWith('local-')) {
+        const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
+        try {
+            await updateDoc(projectRef, { name: projectName });
+            toast({ title: 'Success', description: 'Project name updated.' });
+        } catch (error) {
+            console.error('Error updating project name:', error);
+            toast({ title: 'Error', description: 'Failed to update project name.', variant: 'destructive' });
+            setProject({ ...project, name: originalName }); // Revert on error
+        }
+    }
+  };
+
 
   const handleScopedChatItemUpdate = (updatedItem: ActionItem) => {
     if (!project || !project.actionPlan) return;
@@ -199,7 +239,29 @@ export default function ProjectPage() {
     <>
       <div className="container py-8 relative">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold font-headline text-slate-200">{project.name}</h2>
+          <div className="flex items-center gap-3">
+              {isEditingName ? (
+                  <Input
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                      onBlur={handleNameSave}
+                      onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleNameSave();
+                          if (e.key === 'Escape') setIsEditingName(false);
+                      }}
+                      autoFocus
+                      className="text-3xl font-bold font-headline text-slate-200 h-auto p-0 border-0 bg-transparent focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:ring-1"
+                  />
+              ) : (
+                  <h2 
+                      className="text-3xl font-bold font-headline text-slate-200 cursor-pointer"
+                      onClick={() => setIsEditingName(true)}
+                  >
+                      {projectName}
+                  </h2>
+              )}
+               <Pencil className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors" onClick={() => setIsEditingName(true)} />
+          </div>
           {pageState === 'dashboard' && (
             <Button variant="outline" onClick={() => setChatOpen(true)}>
               <MessageSquare className="mr-2" /> Chat with Arbiter
@@ -234,3 +296,5 @@ export default function ProjectPage() {
     </>
   );
 }
+
+    

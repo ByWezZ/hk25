@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -19,6 +20,9 @@ import { Spinner } from '../Spinner';
 import { scopedChat } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { getAIErrorMessage } from '@/lib/utils';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '../auth/AuthProvider';
 
 type ScopedChatDialogProps = {
   item: ActionItem | null;
@@ -27,6 +31,7 @@ type ScopedChatDialogProps = {
 };
 
 export function ScopedChatDialog({ item, onClose, onUpdate }: ScopedChatDialogProps) {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -84,8 +89,7 @@ export function ScopedChatDialog({ item, onClose, onUpdate }: ScopedChatDialogPr
     } catch (error) {
       console.error('Scoped chat error:', error);
       toast({ title: 'Error', description: getAIErrorMessage(error), variant: 'destructive' });
-      // Revert optimistic update on error
-      onUpdate({ ...item, chatHistory: chatHistory });
+      onUpdate({ ...item, chatHistory: chatHistory }); // Revert optimistic update
     } finally {
       setIsLoading(false);
     }
@@ -145,3 +149,5 @@ export function ScopedChatDialog({ item, onClose, onUpdate }: ScopedChatDialogPr
     </Dialog>
   );
 }
+
+    
