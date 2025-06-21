@@ -26,28 +26,37 @@ export default function ProjectPage() {
 
   useEffect(() => {
     const fetchProjectData = async () => {
-      if (user && projectId && db) {
-        const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
-        try {
-          const docSnap = await getDoc(projectDocRef);
-          if (docSnap.exists()) {
-            setProject({ id: docSnap.id, ...docSnap.data() } as Project);
-          } else {
-            toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
+      setLoading(true);
+      if (user && projectId) {
+        if (db) {
+          const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
+          try {
+            const docSnap = await getDoc(projectDocRef);
+            if (docSnap.exists()) {
+              setProject({ id: docSnap.id, ...docSnap.data() } as Project);
+            } else {
+              toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
+              setProject(null);
+            }
+          } catch (error) {
+            console.error("Error fetching project:", error);
+            toast({ title: 'Error', description: 'Failed to fetch project data. Check your internet connection or Firebase setup.', variant: 'destructive' });
             setProject(null);
+          } finally {
+            setLoading(false);
           }
-        } catch (error) {
-          console.error("Error fetching project:", error);
-          toast({ title: 'Error', description: 'Failed to fetch project data. Check your internet connection or Firebase setup.', variant: 'destructive' });
-          setProject(null);
-        } finally {
+        } else {
+          // Firebase is not configured, use mock data for demonstration.
+          setProject({
+            id: projectId as string,
+            name: `Mock Project`,
+            userId: user.uid,
+            createdAt: new Date(),
+          });
           setLoading(false);
         }
       } else {
         setLoading(false);
-        if (user && projectId && !db) {
-          toast({ title: 'Offline Mode', description: 'Firebase is not configured. Project data is unavailable.', variant: 'destructive' });
-        }
       }
     };
 
@@ -55,18 +64,20 @@ export default function ProjectPage() {
   }, [user, projectId, toast]);
 
   const handleStrategySubmit = async (strategy: string) => {
-    if (!user || !projectId || !db || !project) return;
+    if (!user || !projectId || !project) return;
     
     setAnalysisLoading(true);
     try {
       const result = await generateAnalysis({ legalStrategy: strategy });
       const newAnalysis = result.analysisDashboard;
 
-      const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
-      await updateDoc(projectDocRef, {
-        strategy,
-        analysis: newAnalysis,
-      });
+      if (db) {
+        const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
+        await updateDoc(projectDocRef, {
+          strategy,
+          analysis: newAnalysis,
+        });
+      }
 
       setProject({ ...project, strategy, analysis: newAnalysis });
       toast({ title: 'Success', description: 'Analysis generated successfully.' });
