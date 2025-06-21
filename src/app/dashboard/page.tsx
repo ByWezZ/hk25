@@ -48,10 +48,6 @@ export default function DashboardPage() {
     <div className="container py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="font-headline text-4xl text-foreground">My Cases</h1>
-        <Button onClick={() => router.push('/project/new')}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Case
-        </Button>
       </div>
       
       {loading ? (
