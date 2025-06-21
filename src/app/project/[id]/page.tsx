@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import type { Project, ActionItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -52,32 +52,32 @@ export default function ProjectPage() {
     
     const fetchProjectData = async () => {
       setLoading(true);
-      if (user && projectId) {
-        if (db) {
-          const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
-          try {
-            const docSnap = await getDoc(projectDocRef);
-            if (docSnap.exists()) {
-              const projectData = { id: docSnap.id, ...docSnap.data() } as Project;
-              setProject(projectData);
-              setProjectName(projectData.name);
-              setPageState(projectData.analysis ? 'dashboard' : 'form');
-            } else {
-              toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
-              router.push('/dashboard');
-            }
-          } catch (error) {
-            console.error("Error fetching project:", error);
-            toast({ title: 'Error', description: 'Failed to fetch project data.', variant: 'destructive' });
-          }
+      if (!user || !projectId || !db) {
+        setLoading(false);
+        if(!db) console.warn("Firebase not configured. Cannot fetch project.");
+        return;
+      }
+      
+      const projectDocRef = doc(db, 'users', user.uid, projectId as string);
+      try {
+        const docSnap = await getDoc(projectDocRef);
+        if (docSnap.exists()) {
+          const projectData = { id: docSnap.id, ...docSnap.data() } as Project;
+          setProject(projectData);
+          setProjectName(projectData.name);
+          setPageState(projectData.analysis ? 'dashboard' : 'form');
+        } else {
+          toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
+          router.push('/dashboard');
         }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+        toast({ title: 'Error', description: 'Failed to fetch project data.', variant: 'destructive' });
       }
       setLoading(false);
     };
 
-    if (!isNewProject) {
-      fetchProjectData();
-    }
+    fetchProjectData();
   }, [user, projectId, toast, isNewProject, router]);
 
   const handleStrategySubmit = async (strategy: string) => {
@@ -91,8 +91,21 @@ export default function ProjectPage() {
       ]);
   
       if (!db) {
-        toast({ title: "Local Mode", description: "Firebase is not configured. Project cannot be saved." });
-        setPageState('form');
+        console.warn("Firebase not configured. Running in local mode.");
+        toast({ title: "Local Mode", description: "Analysis generated. Project will not be saved." });
+
+        const localProject: Project = {
+          id: `local-${Date.now()}`,
+          name: nameResult.projectName,
+          userId: user.uid,
+          strategy: strategy,
+          analysis: analysisResult.analysisDashboard,
+          createdAt: new Date(),
+        };
+        
+        setProject(localProject);
+        setProjectName(localProject.name);
+        setPageState('dashboard');
         return;
       }
 
@@ -156,13 +169,13 @@ export default function ProjectPage() {
   }
   
   const handleActionItemUpdate = async (updatedItems: ActionItem[]) => {
-    if (!project || isNewProject) return;
+    if (!project) return;
     
     const originalActionPlan = project.actionPlan;
     const updatedProject = { ...project, actionPlan: updatedItems };
     setProject(updatedProject);
 
-    if (db && user) {
+    if (db && user && !project.id.startsWith('local-')) {
       const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
       try {
         await updateDoc(projectRef, { actionPlan: updatedItems });
@@ -175,7 +188,7 @@ export default function ProjectPage() {
   };
 
   const handleNameSave = async () => {
-    if (!user || !project || isNewProject || project.name === projectName) {
+    if (!project || project.name === projectName) {
         setIsEditingName(false);
         return;
     }
@@ -185,7 +198,7 @@ export default function ProjectPage() {
     setProject(updatedProjectData); // Optimistic update
     setIsEditingName(false);
 
-    if (db) {
+    if (db && user && !project.id.startsWith('local-')) {
         const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
         try {
             await updateDoc(projectRef, { name: projectName });
@@ -256,7 +269,7 @@ export default function ProjectPage() {
   return (
     <>
       <div className="container py-8 relative">
-        {project && !isNewProject && (
+        {project && (
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
               {isEditingName ? (
@@ -292,7 +305,7 @@ export default function ProjectPage() {
         {renderContent()}
       </div>
       
-      {project && !isNewProject && (
+      {project && (
         <>
           <ChatWindow
             isOpen={isChatOpen}
