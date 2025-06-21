@@ -32,7 +32,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Scale className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="font-headline text-4xl text-slate-100">Tribunal Genesis</CardTitle>
+          <CardTitle className="font-headline text-4xl text-slate-100">DIALOGUE</CardTitle>
           <CardDescription className="text-slate-400">
             Your AI-Powered Strategic Co-Counsel
           </CardDescription>

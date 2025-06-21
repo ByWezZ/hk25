@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tribunal Genesis',
-  description: 'AI-powered strategic co-counsel for international arbitration lawyers.',
+  title: 'DIALOGUE',
+  description: 'AI-powered strategic co-counsel for lawyers.',
 };
 
 export default function RootLayout({

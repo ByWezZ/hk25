@@ -14,6 +14,8 @@ import { optimizePrompt as optimizePromptFlow } from '@/ai/flows/optimize-prompt
 import type { OptimizePromptInput, OptimizePromptOutput } from '@/ai/flows/optimize-prompt';
 import { generateAdversarialPlaybook as generateAdversarialPlaybookFlow } from '@/ai/flows/generate-adversarial-playbook';
 import type { GenerateAdversarialPlaybookInput, GenerateAdversarialPlaybookOutput } from '@/ai/flows/generate-adversarial-playbook';
+import { generateProjectName as generateProjectNameFlow } from '@/ai/flows/generate-project-name';
+import type { GenerateProjectNameInput, GenerateProjectNameOutput } from '@/ai/flows/generate-project-name';
 
 export async function generateAnalysis(
   input: GenerateAnalysisInput
@@ -55,4 +57,10 @@ export async function generateAdversarialPlaybook(
     input: GenerateAdversarialPlaybookInput
 ): Promise<GenerateAdversarialPlaybookOutput> {
     return await generateAdversarialPlaybookFlow(input);
+}
+
+export async function generateProjectName(
+  input: GenerateProjectNameInput
+): Promise<GenerateProjectNameOutput> {
+  return await generateProjectNameFlow(input);
 }

@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import type { Project, ActionItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import { ActionChecklist } from '@/components/features/ActionChecklist';
 import { ChatWindow } from '@/components/features/ChatWindow';
 import { ScopedChatDialog } from '@/components/features/ScopedChatDialog';
 import { ActionPlanDraftDialog } from '@/components/features/ActionPlanDraftDialog';
-import { generateAnalysis, generateActionPlan } from '@/lib/actions';
+import { generateAnalysis, generateActionPlan, generateProjectName } from '@/lib/actions';
 import { getAIErrorMessage } from '@/lib/utils';
 import { MessageSquare, ListTodo, Pencil } from 'lucide-react';
 
@@ -26,12 +25,15 @@ type PageState = 'form' | 'thinking' | 'dashboard';
 
 export default function ProjectPage() {
   const { id: projectId } = useParams();
+  const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const isNewProject = projectId === 'new';
+
   const [project, setProject] = useState<Project | null>(null);
   const [pageState, setPageState] = useState<PageState>('form');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isNewProject);
   const [isChatOpen, setChatOpen] = useState(false);
   const [scopedChatItem, setScopedChatItem] = useState<ActionItem | null>(null);
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
@@ -41,10 +43,17 @@ export default function ProjectPage() {
   const [projectName, setProjectName] = useState('');
 
   useEffect(() => {
+    if (isNewProject) {
+      setLoading(false);
+      setPageState('form');
+      setProject(null);
+      return;
+    }
+    
     const fetchProjectData = async () => {
       setLoading(true);
       if (user && projectId) {
-        if (db && !(projectId as string).startsWith('local-')) {
+        if (db) {
           const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
           try {
             const docSnap = await getDoc(projectDocRef);
@@ -55,50 +64,59 @@ export default function ProjectPage() {
               setPageState(projectData.analysis ? 'dashboard' : 'form');
             } else {
               toast({ title: 'Error', description: 'Project not found.', variant: 'destructive' });
-              setProject(null);
+              router.push('/dashboard');
             }
           } catch (error) {
             console.error("Error fetching project:", error);
             toast({ title: 'Error', description: 'Failed to fetch project data.', variant: 'destructive' });
           }
-        } else {
-          const localProject = {
-            id: projectId as string,
-            name: `Local Project`,
-            userId: user.uid,
-            createdAt: new Date(),
-          }
-          setProject(localProject);
-          setProjectName(localProject.name);
-          setPageState('form');
         }
       }
       setLoading(false);
     };
 
-    fetchProjectData();
-  }, [user, projectId, toast]);
+    if (!isNewProject) {
+      fetchProjectData();
+    }
+  }, [user, projectId, toast, isNewProject, router]);
 
   const handleStrategySubmit = async (strategy: string) => {
-    if (!user || !projectId || !project) return;
-
+    if (!user) return;
     setPageState('thinking');
+  
     try {
-      const result = await generateAnalysis({ legalStrategy: strategy });
-      const newAnalysis = result.analysisDashboard;
-      
-      const updatedProject = { ...project, strategy, analysis: newAnalysis };
-
-      if (db && !(projectId as string).startsWith('local-')) {
-        const projectDocRef = doc(db, 'users', user.uid, 'projects', projectId as string);
-        await setDoc(projectDocRef, updatedProject, { merge: true });
+      const [nameResult, analysisResult] = await Promise.all([
+        generateProjectName({ strategyText: strategy }),
+        generateAnalysis({ legalStrategy: strategy }),
+      ]);
+  
+      if (!db) {
+        toast({ title: "Local Mode", description: "Firebase is not configured. Project cannot be saved." });
+        setPageState('form');
+        return;
       }
 
-      setProject(updatedProject);
-      setPageState('dashboard');
-      toast({ title: 'Success', description: 'Analysis generated successfully.' });
+      const newProjectData: Omit<Project, 'id' | 'createdAt'> = {
+        name: nameResult.projectName,
+        userId: user.uid,
+        strategy: strategy,
+        analysis: analysisResult.analysisDashboard,
+      };
+      
+      const projectWithTimestamp = {
+        ...newProjectData,
+        createdAt: serverTimestamp(),
+      }
+
+      const projectCollectionRef = collection(db, 'users', user.uid, 'projects');
+      const newDocRef = await addDoc(projectCollectionRef, projectWithTimestamp);
+      
+      toast({ title: 'Success', description: 'Analysis generated and project created.' });
+
+      router.push(`/project/${newDocRef.id}`);
+
     } catch (error) {
-      console.error("Error generating analysis:", error);
+      console.error("Error creating project and analysis:", error);
       toast({ title: 'Error', description: getAIErrorMessage(error), variant: 'destructive' });
       setPageState('form'); 
     }
@@ -138,13 +156,13 @@ export default function ProjectPage() {
   }
   
   const handleActionItemUpdate = async (updatedItems: ActionItem[]) => {
-    if (!project) return;
+    if (!project || isNewProject) return;
     
     const originalActionPlan = project.actionPlan;
     const updatedProject = { ...project, actionPlan: updatedItems };
     setProject(updatedProject);
 
-    if (db && user && !project.id.startsWith('local-')) {
+    if (db && user) {
       const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
       try {
         await updateDoc(projectRef, { actionPlan: updatedItems });
@@ -157,7 +175,7 @@ export default function ProjectPage() {
   };
 
   const handleNameSave = async () => {
-    if (!user || !projectId || !project || project.name === projectName) {
+    if (!user || !project || isNewProject || project.name === projectName) {
         setIsEditingName(false);
         return;
     }
@@ -167,7 +185,7 @@ export default function ProjectPage() {
     setProject(updatedProjectData); // Optimistic update
     setIsEditingName(false);
 
-    if (db && !project.id.startsWith('local-')) {
+    if (db) {
         const projectRef = doc(db, 'users', user.uid, 'projects', project.id);
         try {
             await updateDoc(projectRef, { name: projectName });
@@ -231,13 +249,14 @@ export default function ProjectPage() {
     );
   }
 
-  if (!project) {
+  if (!project && !isNewProject) {
     return <div className="container py-8 text-center text-slate-400">Project could not be loaded.</div>;
   }
 
   return (
     <>
       <div className="container py-8 relative">
+        {project && !isNewProject && (
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
               {isEditingName ? (
@@ -268,22 +287,27 @@ export default function ProjectPage() {
             </Button>
           )}
         </div>
+        )}
         
         {renderContent()}
       </div>
       
-      <ChatWindow
-        isOpen={isChatOpen}
-        onOpenChange={setChatOpen}
-        project={project}
-        onProjectUpdate={setProject}
-      />
+      {project && !isNewProject && (
+        <>
+          <ChatWindow
+            isOpen={isChatOpen}
+            onOpenChange={setChatOpen}
+            project={project}
+            onProjectUpdate={setProject}
+          />
 
-      <ScopedChatDialog
-        item={scopedChatItem}
-        onClose={() => setScopedChatItem(null)}
-        onUpdate={handleScopedChatItemUpdate}
-      />
+          <ScopedChatDialog
+            item={scopedChatItem}
+            onClose={() => setScopedChatItem(null)}
+            onUpdate={handleScopedChatItemUpdate}
+          />
+        </>
+      )}
 
       {draftActionPlan && (
         <ActionPlanDraftDialog
@@ -296,5 +320,3 @@ export default function ProjectPage() {
     </>
   );
 }
-
-    

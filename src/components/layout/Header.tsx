@@ -40,7 +40,7 @@ export function Header() {
           onClick={() => router.push('/dashboard')}
         >
             <Scale className="h-6 w-6 text-primary" />
-            <h1 className="font-headline text-2xl font-bold text-slate-100">Tribunal Genesis</h1>
+            <h1 className="font-headline text-2xl font-bold text-slate-100">DIALOGUE</h1>
         </div>
         
         {user && (

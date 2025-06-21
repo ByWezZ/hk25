@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, orderBy, getDocs, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, FileText } from 'lucide-react';
@@ -17,57 +17,40 @@ export default function DashboardPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (user && db) {
       const fetchProjects = async () => {
         setLoading(true);
-        const q = query(collection(db, 'users', user.uid, 'projects'), orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const userProjects = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Project[];
-        setProjects(userProjects);
-        setLoading(false);
+        try {
+          const q = query(collection(db, 'users', user.uid, 'projects'), orderBy('createdAt', 'desc'));
+          const querySnapshot = await getDocs(q);
+          const userProjects = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as Project[];
+          setProjects(userProjects);
+        } catch (error) {
+          console.error("Error fetching projects:", error);
+          setProjects([]);
+        } finally {
+          setLoading(false);
+        }
       };
       fetchProjects();
     } else {
-        // Handle case where db might not be available
-        setProjects([]);
-        setLoading(false);
+      setProjects([]);
+      setLoading(false);
     }
   }, [user]);
-
-  const createNewProject = async () => {
-    if (user && db) {
-      setIsCreating(true);
-      try {
-        const newProjectRef = await addDoc(collection(db, 'users', user.uid, 'projects'), {
-          name: `New Project ${new Date().toLocaleString()}`,
-          userId: user.uid,
-          createdAt: serverTimestamp(),
-        });
-        router.push(`/project/${newProjectRef.id}`);
-      } catch (error) {
-        console.error("Error creating new project:", error);
-        setIsCreating(false);
-      }
-    } else {
-        // If no db, just navigate to a new project page with a temporary ID.
-        // This won't be saved, but allows use of the app.
-        router.push(`/project/local-${Date.now()}`);
-    }
-  };
 
   return (
     <div className="container py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="font-headline text-4xl text-slate-100">My Projects</h1>
-        <Button onClick={createNewProject} disabled={isCreating}>
-          {isCreating ? <Spinner className="mr-2" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-          New Project
+        <Button onClick={() => router.push('/project/new')}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          New Analysis
         </Button>
       </div>
       
@@ -82,12 +65,12 @@ export default function DashboardPage() {
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
             <CardTitle className="text-slate-200">No Projects Yet</CardTitle>
-            <CardDescription className="text-slate-400">Get started by creating your first project.</CardDescription>
+            <CardDescription className="text-slate-400">Get started by creating your first analysis.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={createNewProject} disabled={isCreating}>
-              {isCreating ? <Spinner className="mr-2" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-              Create New Project
+            <Button onClick={() => router.push('/project/new')}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create New Analysis
             </Button>
           </CardContent>
         </Card>
