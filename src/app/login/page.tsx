@@ -3,12 +3,13 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { Scale } from 'lucide-react';
+import { Scale, Terminal } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FcGoogle } from 'react-icons/fc';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function LoginPage() {
   const { user } = useAuth();
@@ -51,6 +52,15 @@ export default function LoginPage() {
             <p className="text-center text-sm text-muted-foreground">
               Sign in to access your dashboard and begin your case analysis.
             </p>
+            {!auth && (
+              <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Configuration Error</AlertTitle>
+                <AlertDescription>
+                  Firebase is not configured. Please add your credentials to the <code>.env</code> file to enable authentication.
+                </AlertDescription>
+              </Alert>
+            )}
             <Button onClick={handleSignIn} className="w-full" size="lg" disabled={!auth}>
               <FcGoogle className="mr-2 h-5 w-5" />
               Sign in with Google
