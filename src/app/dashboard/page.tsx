@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, FileText } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import type { Project } from '@/lib/types';
 import { Spinner } from '@/components/Spinner';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,31 +15,31 @@ import { formatDistanceToNow } from 'date-fns';
 export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [cases, setCases] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user && db) {
-      const fetchProjects = async () => {
+      const fetchCases = async () => {
         setLoading(true);
         try {
           const q = query(collection(db, 'users', user.uid, 'projects'), orderBy('createdAt', 'desc'));
           const querySnapshot = await getDocs(q);
-          const userProjects = querySnapshot.docs.map(doc => ({
+          const userCases = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
           })) as Project[];
-          setProjects(userProjects);
+          setCases(userCases);
         } catch (error) {
-          console.error("Error fetching projects:", error);
-          setProjects([]);
+          console.error("Error fetching cases:", error);
+          setCases([]);
         } finally {
           setLoading(false);
         }
       };
-      fetchProjects();
+      fetchCases();
     } else {
-      setProjects([]);
+      setCases([]);
       setLoading(false);
     }
   }, [user]);
@@ -47,10 +47,10 @@ export default function DashboardPage() {
   return (
     <div className="container py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="font-headline text-4xl text-foreground">My Projects</h1>
+        <h1 className="font-headline text-4xl text-foreground">My Cases</h1>
         <Button onClick={() => router.push('/project/new')}>
           <PlusCircle className="mr-2 h-4 w-4" />
-          New Analysis
+          New Case
         </Button>
       </div>
       
@@ -58,43 +58,39 @@ export default function DashboardPage() {
         <div className="flex justify-center items-center h-64">
           <Spinner size="lg" />
         </div>
-      ) : projects.length === 0 ? (
-        <Card className="text-center py-12 bg-card backdrop-blur-lg border-dashed border shadow-lg">
-          <CardHeader>
-            <div className="mx-auto bg-secondary rounded-full h-16 w-16 flex items-center justify-center mb-4">
-              <FileText className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <CardTitle>No Projects Yet</CardTitle>
-            <CardDescription>Get started by creating your first analysis.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push('/project/new')}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create New Analysis
-            </Button>
-          </CardContent>
-        </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
+          {cases.map((caseItem) => (
             <Card 
-              key={project.id} 
+              key={caseItem.id} 
               className="bg-card backdrop-blur-lg border hover:border-primary/80 hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer group"
-              onClick={() => router.push(`/project/${project.id}`)}
+              onClick={() => router.push(`/project/${caseItem.id}`)}
             >
               <CardHeader>
-                <CardTitle className="truncate group-hover:text-primary transition-colors">{project.name}</CardTitle>
+                <CardTitle className="truncate group-hover:text-primary transition-colors">{caseItem.name}</CardTitle>
                 <CardDescription>
-                  {project.createdAt?.toDate ? `Created ${formatDistanceToNow(project.createdAt.toDate())} ago` : 'Date not available'}
+                  {caseItem.createdAt?.toDate ? `Created ${formatDistanceToNow(caseItem.createdAt.toDate())} ago` : 'Date not available'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {project.strategy || 'No strategy submitted yet.'}
+                  {caseItem.strategy || 'No strategy submitted yet.'}
                 </p>
               </CardContent>
             </Card>
           ))}
+          <Card
+            className="flex flex-col items-center justify-center text-center py-12 bg-card/60 backdrop-blur-sm border-dashed border-border/50 hover:border-primary/80 hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer group min-h-[220px]"
+            onClick={() => router.push('/project/new')}
+          >
+            <CardHeader>
+                <div className="mx-auto bg-secondary rounded-full h-16 w-16 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                    <PlusCircle className="h-8 w-8 text-muted-foreground transition-colors group-hover:text-primary" />
+                </div>
+                <CardTitle className="transition-colors group-hover:text-primary">New Case</CardTitle>
+                <CardDescription>Start a new analysis.</CardDescription>
+            </CardHeader>
+          </Card>
         </div>
       )}
     </div>
